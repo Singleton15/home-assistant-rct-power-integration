@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.rct_power import RctData, async_setup_entry
+from custom_components.rct_power import (
+    RctData,
+    async_setup_entry,
+    object_ids_for_update_priority,
+)
 from custom_components.rct_power.const import (
     CONF_ENTITY_PREFIX,
     CONF_HOSTNAME,
@@ -17,6 +21,86 @@ from custom_components.rct_power.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+from custom_components.rct_power.lib.entities import all_entity_descriptions
+from custom_components.rct_power.lib.entity import resolve_object_infos
+
+
+def test_object_ids_excludes_registry_disabled_entity(monkeypatch) -> None:
+    """Object IDs used only by a disabled entity are not polled."""
+    entity_description = next(
+        description
+        for description in all_entity_descriptions
+        if description.unique_id is not None
+    )
+    monkeypatch.setattr(
+        "custom_components.rct_power.all_entity_descriptions", [entity_description]
+    )
+
+    assert (
+        object_ids_for_update_priority(
+            entity_description.update_priority,
+            "test-entry",
+            {f"test-entry-{entity_description.unique_id}": False},
+        )
+        == []
+    )
+
+
+def test_object_ids_excludes_default_disabled_entity(monkeypatch) -> None:
+    """Object IDs for entities disabled by default are not polled."""
+    entity_description = next(
+        description
+        for description in all_entity_descriptions
+        if description.entity_registry_enabled_default is False
+    )
+    monkeypatch.setattr(
+        "custom_components.rct_power.all_entity_descriptions", [entity_description]
+    )
+
+    assert (
+        object_ids_for_update_priority(
+            entity_description.update_priority, "test-entry", {}
+        )
+        == []
+    )
+
+
+def test_object_ids_includes_user_enabled_default_disabled_entity(
+    monkeypatch,
+) -> None:
+    """An explicit registry enablement overrides the default-disabled setting."""
+    entity_description = next(
+        description
+        for description in all_entity_descriptions
+        if description.entity_registry_enabled_default is False
+    )
+    monkeypatch.setattr(
+        "custom_components.rct_power.all_entity_descriptions", [entity_description]
+    )
+    unique_id = (
+        f"test-entry-{entity_description.unique_id}"
+        if entity_description.unique_id
+        else "-".join(
+            [
+                "test-entry",
+                *(
+                    str(object_info.object_id)
+                    for object_info in resolve_object_infos(entity_description)
+                ),
+            ]
+        )
+    )
+
+    assert set(
+        object_ids_for_update_priority(
+            entity_description.update_priority,
+            "test-entry",
+            {unique_id: True},
+        )
+    ) == {
+        object_info.object_id
+        for object_info in resolve_object_infos(entity_description)
+    }
 
 
 # We can pass fixtures as defined in conftest.py to tell pytest to use the fixture

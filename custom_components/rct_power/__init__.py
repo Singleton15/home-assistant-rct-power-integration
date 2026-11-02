@@ -28,7 +28,7 @@ from .const import (
 from .coordinator import RctPowerDataUpdateCoordinator
 from .lib.api import RctPowerApiClient
 from .lib.entities import all_entity_descriptions
-from .lib.entity import resolve_object_infos
+from .lib.entity import RctPowerEntityDescription, resolve_object_infos
 from .models import RctConfEntryData, RctConfEntryOptions
 
 RCT_DATA_KEY: HassEntryKey[RctData] = HassEntryKey(DOMAIN)
@@ -41,16 +41,37 @@ class RctData:
     update_coordinators: dict[EntityUpdatePriority, RctPowerDataUpdateCoordinator]
 
 
-def object_ids_for_update_priority(update_priority: EntityUpdatePriority) -> list[int]:
-    """Collect all object_ids for an update_priority."""
+def object_ids_for_update_priority(
+    update_priority: EntityUpdatePriority,
+    entry_id: str,
+    entity_enabled_by_unique_id: dict[str, bool],
+) -> list[int]:
+    """Collect object IDs needed by enabled entities for an update priority."""
     return list(
         {
             object_info.object_id
             for entity_description in all_entity_descriptions
             if entity_description.update_priority == update_priority
+            and entity_enabled_by_unique_id.get(
+                _entity_unique_id(entry_id, entity_description),
+                entity_description.entity_registry_enabled_default is not False,
+            )
             for object_info in resolve_object_infos(entity_description)
         }
     )
+
+
+def _entity_unique_id(
+    entry_id: str, entity_description: RctPowerEntityDescription
+) -> str:
+    if entity_description.unique_id:
+        return f"{entry_id}-{entity_description.unique_id}"
+
+    object_ids = [
+        str(object_info.object_id)
+        for object_info in resolve_object_infos(entity_description)
+    ]
+    return "-".join([entry_id, *object_ids])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
@@ -62,13 +83,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         hostname=data[CONF_HOSTNAME],
         port=data[CONF_PORT],
     )
+    entity_registry = er.async_get(hass)
+    entity_enabled_by_unique_id = {
+        entity_entry.unique_id: entity_entry.disabled_by is None
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
+    }
 
     frequent_update_coordinator = RctPowerDataUpdateCoordinator(
         hass=hass,
         entry=entry,
         client=client,
         name_suffix="frequent",
-        object_ids=object_ids_for_update_priority(EntityUpdatePriority.FREQUENT),
+        object_ids=object_ids_for_update_priority(
+            EntityUpdatePriority.FREQUENT,
+            entry.entry_id,
+            entity_enabled_by_unique_id,
+        ),
         update_interval=options.get(
             ConfScanInterval.FREQUENT, ScanIntervalDefault.FREQUENT
         ),
@@ -79,7 +111,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         entry=entry,
         client=client,
         name_suffix="infrequent",
-        object_ids=object_ids_for_update_priority(EntityUpdatePriority.INFREQUENT),
+        object_ids=object_ids_for_update_priority(
+            EntityUpdatePriority.INFREQUENT,
+            entry.entry_id,
+            entity_enabled_by_unique_id,
+        ),
         update_interval=options.get(
             ConfScanInterval.INFREQUENT, ScanIntervalDefault.INFREQUENT
         ),
@@ -90,7 +126,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         entry=entry,
         client=client,
         name_suffix="static",
-        object_ids=object_ids_for_update_priority(EntityUpdatePriority.STATIC),
+        object_ids=object_ids_for_update_priority(
+            EntityUpdatePriority.STATIC,
+            entry.entry_id,
+            entity_enabled_by_unique_id,
+        ),
         update_interval=options.get(
             ConfScanInterval.STATIC, ScanIntervalDefault.STATIC
         ),
