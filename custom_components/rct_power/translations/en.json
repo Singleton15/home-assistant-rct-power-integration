@@ -26,7 +26,7 @@
           "frequent_scan_interval": "Frequent polling interval (s)",
           "infrequent_scan_interval": "Infrequent polling interval (s)",
           "static_scan_interval": "Static polling interval (s)",
-          "allow_writes": "Allow changing the power reduction of this inverter (only on the master)",
+          "allow_writes": "Allow changing the power reduction and external power setting of this inverter (only on the master)",
           "allow_battery_writes": "Allow changing the battery settings of this inverter"
         }
       }
