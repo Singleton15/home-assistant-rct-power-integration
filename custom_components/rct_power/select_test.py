@@ -191,9 +191,9 @@ async def test_write_constant_soc_target(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80},
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 96.5},
             blocking=True,
         )
-        write.assert_awaited_once_with(TARGET_ID, 0.8)
+        write.assert_awaited_once_with(TARGET_ID, 0.965)
 
-    assert hass.states.get(entity_id).state == "80.0"  # type: ignore
+    assert hass.states.get(entity_id).state == "96.5"  # type: ignore

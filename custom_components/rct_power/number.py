@@ -68,11 +68,11 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         name="Battery State of Charge Constant Target",
         icon="mdi:battery-arrow-up",
         write_option=CONF_ALLOW_BATTERY_WRITES,
-        update_priority=EntityUpdatePriority.INFREQUENT,
+        update_priority=EntityUpdatePriority.FREQUENT,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=0,
         native_max_value=100,
-        native_step=1,
+        native_step=0.1,
         scale=100,
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
@@ -109,16 +109,18 @@ class RctPowerNumberEntity(NumberEntity, RctPowerEntity):
         return None
 
     async def async_set_native_value(self, value: float) -> None:
+        tolerance = min(0.5, (self.entity_description.native_step or 1) / 2)
+
         # the inverter stores the setting permanently, so avoid needless writes
         if self.native_value is not None and math.isclose(
-            self.native_value, value, abs_tol=0.5
+            self.native_value, value, abs_tol=tolerance
         ):
             return
 
         scale = self.entity_description.scale
         written = await self.async_write_value(value / scale)
 
-        if not math.isclose(written * scale, value, abs_tol=0.5):
+        if not math.isclose(written * scale, value, abs_tol=tolerance):
             raise HomeAssistantError(
                 f"The inverter kept {written * scale} instead of {value}"
             )

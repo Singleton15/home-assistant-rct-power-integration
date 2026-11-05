@@ -320,7 +320,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         get_device_info=get_battery_device_info,
         key="power_mng.soc_target_set",
         name="Battery State of Charge Constant Target",
-        update_priority=EntityUpdatePriority.INFREQUENT,
+        update_priority=EntityUpdatePriority.FREQUENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="%",
     ),
