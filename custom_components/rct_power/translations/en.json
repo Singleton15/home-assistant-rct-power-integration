@@ -23,6 +23,7 @@
         "data": {
           "objects": "Enabled objects",
           "scan_interval": "Polling interval",
+          "very_frequent_scan_interval": "Very frequent polling interval (s)",
           "frequent_scan_interval": "Frequent polling interval (s)",
           "infrequent_scan_interval": "Infrequent polling interval (s)",
           "static_scan_interval": "Static polling interval (s)",
