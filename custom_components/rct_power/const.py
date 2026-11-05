@@ -25,6 +25,7 @@ BATTERY_MODULE_COUNT: Final = 6
 
 
 class EntityUpdatePriority(Enum):
+    VERY_FREQUENT = 0
     FREQUENT = 1
     INFREQUENT = 2
     STATIC = 3
@@ -43,12 +44,14 @@ DEFAULT_PORT: Final = 8899
 
 
 class ConfScanInterval(StrEnum):
+    VERY_FREQUENT = "very_frequent_scan_interval"
     FREQUENT = "frequent_scan_interval"
     INFREQUENT = "infrequent_scan_interval"
     STATIC = "static_scan_interval"
 
 
 class ScanIntervalDefault(IntEnum):
+    VERY_FREQUENT = 5
     FREQUENT = 30
     INFREQUENT = 60 * 3
     STATIC = 60 * 60
