@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from homeassistant.components.number import (
@@ -38,9 +38,13 @@ from custom_components.rct_power.lib.api import RctPowerData, ValidApiResponse
 
 STRATEGY_ID = REGISTRY.get_by_name("power_mng.soc_strategy").object_id
 TARGET_ID = REGISTRY.get_by_name("power_mng.soc_target_set").object_id
+MIN_SOC_ID = REGISTRY.get_by_name("power_mng.soc_min").object_id
+MAX_SOC_ID = REGISTRY.get_by_name("power_mng.soc_max").object_id
 POWER_ID = REGISTRY.get_by_name("power_mng.battery_power_extern").object_id
 SELECT_ENTITY_ID = "select.battery_at_master_master_battery_state_of_charge_strategy"
 NUMBER_ENTITY_ID = "number.battery_at_master_master_battery_external_power"
+MIN_SOC_ENTITY_ID = "number.battery_at_master_master_battery_minimum_state_of_charge"
+MAX_SOC_ENTITY_ID = "number.battery_at_master_master_battery_maximum_state_of_charge"
 
 
 def response(object_id: int, value: float) -> ValidApiResponse:
@@ -61,6 +65,10 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(object_id, 4)
         elif object_id == TARGET_ID:
             data[object_id] = response(object_id, 0.97)
+        elif object_id == MIN_SOC_ID:
+            data[object_id] = response(object_id, 0.05)
+        elif object_id == MAX_SOC_ID:
+            data[object_id] = response(object_id, 0.95)
         elif object_id == POWER_ID:
             data[object_id] = response(object_id, 0.0)
     return data
@@ -182,7 +190,9 @@ async def test_write_constant_soc_target(hass: HomeAssistant) -> None:
     entity_id = (
         "number.battery_at_master_master_battery_state_of_charge_constant_target"
     )
-    assert hass.states.get(entity_id).state == "97.0"  # type: ignore
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == "97.0"
+    assert state.attributes["min"] == 5
 
     with patch(
         "custom_components.rct_power.RctPowerApiClient.async_write_value",
@@ -197,3 +207,38 @@ async def test_write_constant_soc_target(hass: HomeAssistant) -> None:
         write.assert_awaited_once_with(TARGET_ID, 0.965)
 
     assert hass.states.get(entity_id).state == "96.5"  # type: ignore
+
+
+async def test_write_min_and_max_soc(hass: HomeAssistant) -> None:
+    await setup(hass, {CONF_ALLOW_BATTERY_WRITES: True})
+
+    min_state = hass.states.get(MIN_SOC_ENTITY_ID)
+    max_state = hass.states.get(MAX_SOC_ENTITY_ID)
+    assert min_state is not None and min_state.state == "5.0"
+    assert max_state is not None and max_state.state == "95.0"
+    assert min_state.attributes["unit_of_measurement"] == "%"
+    assert max_state.attributes["unit_of_measurement"] == "%"
+    assert min_state.attributes["min"] == 5
+    assert max_state.attributes["min"] == 5
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=response),
+    ) as write:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: MIN_SOC_ENTITY_ID, ATTR_VALUE: 5.5},
+            blocking=True,
+        )
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: MAX_SOC_ENTITY_ID, ATTR_VALUE: 95.5},
+            blocking=True,
+        )
+
+        write.assert_has_awaits([call(MIN_SOC_ID, 0.055), call(MAX_SOC_ID, 0.955)])
+
+    assert hass.states.get(MIN_SOC_ENTITY_ID).state == "5.5"  # type: ignore
+    assert hass.states.get(MAX_SOC_ENTITY_ID).state == "95.5"  # type: ignore
