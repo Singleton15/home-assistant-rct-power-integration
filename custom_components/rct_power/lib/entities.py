@@ -55,6 +55,7 @@ from .state_helpers import (
     available_battery_status,
     get_first_api_response_value_as_absolute_state,
     get_first_api_response_value_as_battery_status,
+    get_first_api_response_value_as_bool,
     get_first_api_response_value_as_timestamp,
     is_battery_balancing,
     is_battery_calibrating,
@@ -1288,6 +1289,13 @@ def get_battery_tower_connection_entity_description(
 
 
 binary_sensor_entity_descriptions: list[RctPowerBinarySensorEntityDescription] = [
+    RctPowerBinarySensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="power_mng.use_grid_power_enable",
+        name="Allow External Power",
+        update_priority=EntityUpdatePriority.FREQUENT,
+        get_is_on=get_first_api_response_value_as_bool,
+    ),
     get_battery_tower_connection_entity_description(
         "battery", "Battery", get_battery_device_info
     ),

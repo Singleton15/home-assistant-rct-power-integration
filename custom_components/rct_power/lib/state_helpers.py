@@ -72,6 +72,17 @@ def get_first_api_response_value_as_absolute_state(
     return value
 
 
+def get_first_api_response_value_as_bool(
+    entity: Any,
+    values: list[ApiResponseValue | None],
+) -> bool | None:
+    match values:
+        case [bool() as first_value, *_]:
+            return first_value
+        case _:
+            return None
+
+
 def sum_api_response_values_as_state(
     entity: SensorEntity,
     values: list[ApiResponseValue | None],

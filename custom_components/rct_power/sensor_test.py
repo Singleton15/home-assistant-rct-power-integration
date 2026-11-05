@@ -38,6 +38,7 @@ from custom_components.rct_power.lib.battery_module_helpers_test import (
 RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "inverter_sn": "INV1",
     "android_description": "Master",
+    "power_mng.use_grid_power_enable": True,
     "battery.bms_sn": "BMS1",
     # an inverter without an external generator reports inf here
     "energy.e_ext_total": float("inf"),
@@ -184,6 +185,7 @@ async def test_battery_module_sensors(
     assert get_binary_state("master_battery_connection").state == "on"
     assert get_binary_state("master_battery_balancing").state == "on"
     assert get_binary_state("master_battery_calibration").state == "off"
+    assert get_binary_state("allow_external_power").state == "on"
 
     state = get_state(hass, "external_energy_production_total")
     assert state.state == "unknown"
