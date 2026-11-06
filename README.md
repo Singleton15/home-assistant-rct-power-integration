@@ -343,6 +343,8 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 
 ## Credits
 
+The initial integration was created by [@weltenwort](https://github.com/weltenwort). This repository is based on [@kubrtcb](https://github.com/kubrtcb)'s [fork](https://github.com/kubrtcb/home-assistant-rct-power-integration), which I chose because it already included write support and supports dual battery tower setups.
+
 This would have been a lot more difficult if not for [@svalouch](https://github.com/svalouch)'s [`python-rctclient`](https://github.com/svalouch/python-rctclient) library. Thank you!
 
 This project was generated from [@oncleben31](https://github.com/oncleben31)'s [Home Assistant Custom Component Cookiecutter](https://github.com/oncleben31/cookiecutter-homeassistant-custom-component) template.
