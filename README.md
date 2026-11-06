@@ -103,42 +103,42 @@ depending on your preference.
 
 ### Grid
 
-| Entity name                                  | Unit | Description                                                                      |
-| -------------------------------------------- | ---- | -------------------------------------------------------------------------------- |
-| Grid Frequency                               | Hz   | the instantaneous overall grid frequency                                         |
-| Grid Frequency P1/P2/P3                      | Hz   | the instantaneous grid frequency on phase 1/2/3                                  |
-| Grid Power                                   | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the grid       |
-| Grid Power P1/P2/P3                          | W    | the instantaneous power consumed from or fed into the grid on phase 1/2/3        |
-| Grid Voltage P1/P2/P3                        | W    | the instantaneous grid voltage on phase 1/2/3                                    |
-| Grid Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed from the grid                                     |
-| Grid Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy fed into the grid                                          |
-| Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation |
-| Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid               |
+| Entity name                                  | Unit | Description                                                                      | Polling frequency |
+| -------------------------------------------- | ---- | -------------------------------------------------------------------------------- | ----------------- |
+| Grid Frequency                               | Hz   | the instantaneous overall grid frequency                                         | frequent          |
+| Grid Frequency P1/P2/P3                      | Hz   | the instantaneous grid frequency on phase 1/2/3                                  | frequent          |
+| Grid Power                                   | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the grid       | frequent          |
+| Grid Power P1/P2/P3                          | W    | the instantaneous power consumed from or fed into the grid on phase 1/2/3        | frequent          |
+| Grid Voltage P1/P2/P3                        | W    | the instantaneous grid voltage on phase 1/2/3                                    | frequent          |
+| Grid Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed from the grid                                     | infrequent        |
+| Grid Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy fed into the grid                                          | infrequent        |
+| Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation | infrequent        |
+| Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid               | static            |
 
 ### Battery
 
-| Entity name                                   | Unit | Description                                                                   |
-| --------------------------------------------- | ---- | ----------------------------------------------------------------------------- |
-| Battery Power                                 | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the battery |
-| Battery Current                               | A    | the instantaneous current flowing from or to the battery                      |
-| Battery Voltage                               | V    | the instantaneous voltage of the battery                                      |
-| Battery Temperature                           | °C   | the instantaneous temperature of the battery                                  |
-| Battery Cycles                                |      | the recorded full charge/discharge cycles of the battery                      |
-| Battery State of Charge                       | %    | the instantaneous state of charge of the battery                              |
-| Battery State of Charge Target                | %    | the state of charge of the battery aimed for by the system                    |
-| Battery Minimum State of Charge               | %    | the configured minimum state of charge of the battery for regular operation   |
-| Battery Minimum State of Charge (island)      | %    | the minimum state of charge of the battery to maintain as an island backup    |
-| Battery Maximum State of Charge               | %    | the maximum state of charge of the battery to aim for to improve battery life |
-| Battery State of Health                       | %    | the estimated state of health of the battery                                  |
-| Battery Stored Energy                         | Wh   | the cumulative energy fed into the battery                                    |
-| Battery Used Energy                           | Wh   | the cumulative energy consumed from the battery                               |
-| Battery Status                                |      | the current battery status (incomplete)                                       |
-| Battery Maximum Charging Current              | A    | the charging current currently allowed by the BMS                             |
-| Battery Converter Maximum Charging Current    | A    | the charging current currently allowed by the inverter's battery converter    |
-| Battery Converter Maximum Discharging Current | A    | the discharging current currently allowed by the battery converter            |
-| Battery State of Charge Strategy              |      | the SOC target selection (e.g. 4 = internal, 2 = external)                    |
-| Battery Efficiency                            | %    | the ratio of used to stored energy                                            |
-| Next Battery Calibration Date                 |      | the date and time of the next planned battery calibration                     |
+| Entity name                                   | Unit | Description                                                                   | Polling frequency |
+| --------------------------------------------- | ---- | ----------------------------------------------------------------------------- | ----------------- |
+| Battery Power                                 | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the battery | frequent          |
+| Battery Current                               | A    | the instantaneous current flowing from or to the battery                      | frequent          |
+| Battery Voltage                               | V    | the instantaneous voltage of the battery                                      | frequent          |
+| Battery Temperature                           | °C   | the instantaneous temperature of the battery                                  | frequent          |
+| Battery Cycles                                |      | the recorded full charge/discharge cycles of the battery                      | infrequent        |
+| Battery State of Charge                       | %    | the instantaneous state of charge of the battery                              | frequent          |
+| Battery State of Charge Target                | %    | the state of charge of the battery aimed for by the system                    | frequent          |
+| Battery Minimum State of Charge               | %    | the configured minimum state of charge of the battery for regular operation   | frequent          |
+| Battery Minimum State of Charge (island)      | %    | the minimum state of charge of the battery to maintain as an island backup    | frequent          |
+| Battery Maximum State of Charge               | %    | the maximum state of charge of the battery to aim for to improve battery life | frequent          |
+| Battery State of Health                       | %    | the estimated state of health of the battery                                  | infrequent        |
+| Battery Stored Energy                         | Wh   | the cumulative energy fed into the battery                                    | frequent          |
+| Battery Used Energy                           | Wh   | the cumulative energy consumed from the battery                               | frequent          |
+| Battery Status                                |      | the current battery status (incomplete)                                       | frequent          |
+| Battery Maximum Charging Current              | A    | the charging current currently allowed by the BMS                             | frequent          |
+| Battery Converter Maximum Charging Current    | A    | the charging current currently allowed by the inverter's battery converter    | frequent          |
+| Battery Converter Maximum Discharging Current | A    | the discharging current currently allowed by the battery converter            | frequent          |
+| Battery State of Charge Strategy              |      | the SOC target selection (e.g. 4 = internal, 2 = external)                    | infrequent        |
+| Battery Efficiency                            | %    | the ratio of used to stored energy                                            | infrequent        |
+| Next Battery Calibration Date                 |      | the date and time of the next planned battery calibration                     | infrequent        |
 
 ### Battery towers, modules and cells
 
@@ -150,30 +150,30 @@ The second tower additionally has its own pack values: `Battery Tower 2 State
 of Charge`, `Voltage`, `Current`, `Temperature`, `Charge Capacity`, `State of
 Health` and `Maximum Charging/Discharging Current`.
 
-| Entity name                           | Unit | Description                                                               |
-| ------------------------------------- | ---- | ------------------------------------------------------------------------- |
-| Battery Max/Min Cell Voltage          | V    | the highest/lowest cell voltage of the tower as reported by its BMS       |
-| Battery Max/Min Cell Temperature      | °C   | the highest/lowest cell temperature of the tower as reported by its BMS   |
-| Battery Module N Cycles               |      | the recorded cycles of module N                                           |
-| Battery Module N Max Cell Voltage     | V    | the highest cell voltage of module N, all cells in the attributes         |
-| Battery Module N Min Cell Voltage     | V    | the lowest cell voltage of module N                                       |
-| Battery Module N Mean Cell Voltage    | V    | the mean cell voltage of module N (disabled by default)                   |
-| Battery Module N Cell Voltage Spread  | mV   | the difference between the highest and lowest cell voltage of module N    |
-| Battery Module N Max Cell Temperature | °C   | the highest cell temperature of module N                                  |
-| Battery Module N Min Cell Temperature | °C   | the lowest cell temperature of module N (disabled by default)             |
-| Battery Module N Max Cell Resistance  | mΩ   | the highest internal cell resistance of module N, all cells in attributes |
-| Battery Module N Mean Cell Resistance | mΩ   | the mean internal cell resistance of module N                             |
+| Entity name                           | Unit | Description                                                               | Polling frequency |
+| ------------------------------------- | ---- | ------------------------------------------------------------------------- | ----------------- |
+| Battery Max/Min Cell Voltage          | V    | the highest/lowest cell voltage of the tower as reported by its BMS       | frequent          |
+| Battery Max/Min Cell Temperature      | °C   | the highest/lowest cell temperature of the tower as reported by its BMS   | frequent          |
+| Battery Module N Cycles               |      | the recorded cycles of module N                                           | infrequent        |
+| Battery Module N Max Cell Voltage     | V    | the highest cell voltage of module N, all cells in the attributes         | infrequent        |
+| Battery Module N Min Cell Voltage     | V    | the lowest cell voltage of module N                                       | infrequent        |
+| Battery Module N Mean Cell Voltage    | V    | the mean cell voltage of module N (disabled by default)                   | infrequent        |
+| Battery Module N Cell Voltage Spread  | mV   | the difference between the highest and lowest cell voltage of module N    | infrequent        |
+| Battery Module N Max Cell Temperature | °C   | the highest cell temperature of module N                                  | infrequent        |
+| Battery Module N Min Cell Temperature | °C   | the lowest cell temperature of module N (disabled by default)             | infrequent        |
+| Battery Module N Max Cell Resistance  | mΩ   | the highest internal cell resistance of module N, all cells in attributes | static            |
+| Battery Module N Mean Cell Resistance | mΩ   | the mean internal cell resistance of module N                             | static            |
 
 Each tower also has five sensors summarizing all of its cells, meant for
 tracking cell health over months (they keep long-term statistics):
 
-| Entity name                           | Unit | Description                                                                  |
-| ------------------------------------- | ---- | ---------------------------------------------------------------------------- |
-| Battery Cell Voltage Spread           | mV   | the difference between the highest and lowest cell of the tower              |
-| Battery Weakest Cell Deviation        | mV   | how far the lowest cell is below the tower's median cell, position in `min_voltage_cell` |
-| Battery Max Cell Resistance           | mΩ   | the highest internal cell resistance of the tower, position in `max_resistance_cell` |
-| Battery Max Cell Resistance Deviation | %    | how much the highest cell resistance exceeds the tower's median              |
-| Battery Flagged Cells                 |      | how many cells report a non-zero status byte, see below                     |
+| Entity name                           | Unit | Description                                                                              | Polling frequency |
+| ------------------------------------- | ---- | ---------------------------------------------------------------------------------------- | ----------------- |
+| Battery Cell Voltage Spread           | mV   | the difference between the highest and lowest cell of the tower                          | infrequent        |
+| Battery Weakest Cell Deviation        | mV   | how far the lowest cell is below the tower's median cell, position in `min_voltage_cell` | infrequent        |
+| Battery Max Cell Resistance           | mΩ   | the highest internal cell resistance of the tower, position in `max_resistance_cell`     | static            |
+| Battery Max Cell Resistance Deviation | %    | how much the highest cell resistance exceeds the tower's median                          | static            |
+| Battery Flagged Cells                 |      | how many cells report a non-zero status byte, see below                                  | infrequent        |
 
 Their attributes `module_cell_voltages` and `module_cell_resistances` hold all
 cells of the tower (one list per module), which is enough to draw a heatmap
@@ -181,13 +181,13 @@ with a markdown card.
 
 #### Tower connection, balancing and calibration
 
-| Entity name                         | Type          | Description                                                                 |
-| ----------------------------------- | ------------- | --------------------------------------------------------------------------- |
-| Battery (Tower 2) Connection        | binary sensor | off when the tower voltage differs from the battery voltage measured by the inverter by 10 V or more |
-| Battery Balancing                   | binary sensor | the balancing bit of the battery status                                     |
-| Battery Calibration                 | binary sensor | the battery status reports a calibration charge                            |
-| Battery Calibration Interval        | d             | how often the inverter runs a calibration charge                            |
-| Battery Calibration Charge Power    | W             | the charging power used for the calibration                                 |
+| Entity name                      | Type          | Description                                                                                          | Polling frequency |
+| -------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- | ----------------- |
+| Battery (Tower 2) Connection     | binary sensor | off when the tower voltage differs from the battery voltage measured by the inverter by 10 V or more | frequent          |
+| Battery Balancing                | binary sensor | the balancing bit of the battery status                                                              | frequent          |
+| Battery Calibration              | binary sensor | the battery status reports a calibration charge                                                      | frequent          |
+| Battery Calibration Interval     | d             | how often the inverter runs a calibration charge                                                     | static            |
+| Battery Calibration Charge Power | W             | the charging power used for the calibration                                                          | static            |
 
 All towers of an inverter sit on the same DC bus, so a connected tower has
 practically the bus voltage. When the BMS opens the contactor of a tower (for
@@ -211,43 +211,43 @@ valid reading is `null`.
 
 ### Household consumers and producers
 
-| Entity name                                      | Unit | Description                                                            |
-| ------------------------------------------------ | ---- | ---------------------------------------------------------------------- |
-| Consumer Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed by the household (from any source)      |
-| Consumer Power                                   | W    | the instantaneous power consumed by the household                      |
-| Consumer Power P1/P2/P3                          | W    | the instantaneous power consumed by the household on phase 1/2/3       |
-| External Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy produced by the external producer (if installed) |
-| Externel Generator S0 Power                      | W    | the instantaneous power produced by external device connected to S0 in |
+| Entity name                                      | Unit | Description                                                            | Polling frequency |
+| ------------------------------------------------ | ---- | ---------------------------------------------------------------------- | ----------------- |
+| Consumer Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed by the household (from any source)      | infrequent        |
+| Consumer Power                                   | W    | the instantaneous power consumed by the household                      | frequent          |
+| Consumer Power P1/P2/P3                          | W    | the instantaneous power consumed by the household on phase 1/2/3       | frequent          |
+| External Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy produced by the external producer (if installed) | infrequent        |
+| Externel Generator S0 Power                      | W    | the instantaneous power produced by external device connected to S0 in | frequent          |
 
 ### Photovoltaic generators
 
-| Entity name                                        | Unit | Description                                                           |
-| -------------------------------------------------- | ---- | --------------------------------------------------------------------- |
-| Generator A Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by generator string A                  |
-| Generator B Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by generator string B                  |
-| All Generators Energy Production Total             | Wh   | the sum of the cumulative energy produced by both generator strings   |
-| Generator A Power                                  | W    | the instantaneous power produced by generator string A                |
-| Generator B Power                                  | W    | the instantaneous power produced by generator string B                |
-| All Generators Power                               | W    | the sum of the instantaneous power produced by both generator strings |
-| Generator A Voltage                                | V    | the instantaneous voltage produced by generator string A              |
-| Generator B Voltage                                | V    | the instantaneous voltage produced by generator string B              |
-| Generator Maximum Power                            | W    | the configured combined maximum power of both generator strings       |
-| Insulation Resistance                              | Ohm  |                                                                       |
-| Insulation Resistance Positive/Negative Input      | Ohm  |                                                                       |
-| Minimum Insulation Resistance                      | Ohm  |                                                                       |
+| Entity name                                        | Unit | Description                                                           | Polling frequency |
+| -------------------------------------------------- | ---- | --------------------------------------------------------------------- | ----------------- |
+| Generator A Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by generator string A                  | infrequent        |
+| Generator B Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by generator string B                  | infrequent        |
+| All Generators Energy Production Total             | Wh   | the sum of the cumulative energy produced by both generator strings   | infrequent        |
+| Generator A Power                                  | W    | the instantaneous power produced by generator string A                | frequent          |
+| Generator B Power                                  | W    | the instantaneous power produced by generator string B                | frequent          |
+| All Generators Power                               | W    | the sum of the instantaneous power produced by both generator strings | frequent          |
+| Generator A Voltage                                | V    | the instantaneous voltage produced by generator string A              | frequent          |
+| Generator B Voltage                                | V    | the instantaneous voltage produced by generator string B              | frequent          |
+| Generator Maximum Power                            | W    | the configured combined maximum power of both generator strings       | static            |
+| Insulation Resistance                              | Ohm  |                                                                       | frequent          |
+| Insulation Resistance Positive/Negative Input      | Ohm  |                                                                       | frequent          |
+| Minimum Insulation Resistance                      | Ohm  |                                                                       | frequent          |
 
 ### Inverter
 
-| Entity name                                     | Unit | Description                                                     |
-| ----------------------------------------------- | ---- | --------------------------------------------------------------- |
-| Inverter AC Power                               | W    | the instantaneous AC power transmitted by the inverter          |
-| Inverter Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by the inverter                  |
-| Inverter Power P1/P2/P3                         | W    | the instantaneous power consumed or generated by the inverter   |
-| Inverter Serial Number                          |      | the serial number of the inverter                               |
-| Faults                                          |      | a bitmask of the failures reported by the inverter              |
-| Core Temperature                                | °C   | the instantaneous temperature of the invertor core              |
-| Heat Sink Temperature                           | °C   | the instantaneous temperature of the invertor heat sink         |
-| Heat Sink (battery actuator) Temperature        | °C   | the instantaneous temperature of the battery actuator heat sink |
+| Entity name                                     | Unit | Description                                                     | Polling frequency |
+| ----------------------------------------------- | ---- | --------------------------------------------------------------- | ----------------- |
+| Inverter AC Power                               | W    | the instantaneous AC power transmitted by the inverter          | frequent          |
+| Inverter Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by the inverter                  | infrequent        |
+| Inverter Power P1/P2/P3                         | W    | the instantaneous power consumed or generated by the inverter   | frequent          |
+| Inverter Serial Number                          |      | the serial number of the inverter                               | static            |
+| Faults                                          |      | a bitmask of the failures reported by the inverter              | frequent          |
+| Core Temperature                                | °C   | the instantaneous temperature of the invertor core              | frequent          |
+| Heat Sink Temperature                           | °C   | the instantaneous temperature of the invertor heat sink         | frequent          |
+| Heat Sink (battery actuator) Temperature        | °C   | the instantaneous temperature of the battery actuator heat sink | frequent          |
 
 ### Limiting the inverter output
 
@@ -278,7 +278,7 @@ inverter" in the options of each inverter with a battery to get:
   chooses how the inverter sets the battery SOC target: `Internal` (the
   default, based on the solar forecast), `Constant`, `External`, `Schedule` or
   the undocumented `SOC target = SOC`. The undocumented `Middle battery
-  voltage` is not offered and shows as unknown.
+voltage` is not offered and shows as unknown.
 - `number.<battery>_battery_state_of_charge_constant_target`
   (`power_mng.soc_target_set`) is the SOC target in % while the strategy is
   `Constant`.
