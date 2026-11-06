@@ -269,6 +269,25 @@ valid reading is `null`.
 | Heat Sink Temperature                           | °C   | the instantaneous temperature of the invertor heat sink         | frequent          |
 | Heat Sink (battery actuator) Temperature        | °C   | the instantaneous temperature of the battery actuator heat sink | frequent          |
 
+### Reducing communication load
+
+When you disable a sensor in Home Assistant, the integration stops requesting
+the corresponding value from the inverter after it is reloaded, unless another
+enabled entity also needs that value. Some entities combine or derive their
+data from values used by other entities, so those requests remain while they
+are still needed.
+
+The inverter's communication unit is known to be not very robust. Too many
+requests can cause communication to freeze. Disabling sensors you do not use
+reduces the communication load and may make shorter polling intervals
+practical.
+
+After disabling sensors, reload the integration for the change to take effect:
+
+1. In Home Assistant, open **Settings** > **Devices & services** > **Integrations**.
+2. Find the RCT Power integration entry for the inverter and open its three-dot menu.
+3. Select **Reload**.
+
 ### Limiting the inverter output
 
 The integration only reads from the inverter unless writing is allowed for a
