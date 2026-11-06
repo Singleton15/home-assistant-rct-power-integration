@@ -282,11 +282,17 @@ voltage` is not offered and shows as unknown.
 - `number.<battery>_battery_state_of_charge_constant_target`
   (`power_mng.soc_target_set`) is the SOC target in % while the strategy is
   `Constant`.
+- `number.<battery>_battery_minimum_state_of_charge` (`power_mng.soc_min`)
+  sets the minimum SOC in % for regular operation.
+- `number.<battery>_battery_maximum_state_of_charge` (`power_mng.soc_max`)
+  sets the maximum SOC in %.
 - `number.<battery>_battery_external_power` (`power_mng.battery_power_extern`)
   is the battery power in W while the strategy is `External`; positive values
   discharge and negative values charge the battery. Charging from the grid with
-  more than the maintenance charge power also needs "Utilize external Inverter
-  energy" (`power_mng.use_grid_power_enable`) on the inverter.
+  more than the maintenance charge power also requires
+  `switch.<prefix>_allow_external_power` (`power_mng.use_grid_power_enable`) to
+  be on. This switch is available on the master when "Allow changing the power
+  reduction and external power setting of this inverter" is enabled.
 
 The inverter keeps the strategy until it is changed again, so switch
 back to `Internal` to return control to the inverter. Calibration and balancing
