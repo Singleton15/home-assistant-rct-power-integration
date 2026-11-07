@@ -964,6 +964,7 @@ inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         get_device_info=get_inverter_device_info,
         key="g_sync.p_ac_grid_sum_lp",
         name="Grid Power",
+        update_priority=EntityUpdatePriority.VERY_FREQUENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RctPowerSensorEntityDescription(

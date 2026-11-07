@@ -47,10 +47,15 @@ Upon installation the integration accepts the following configuration parameters
 
 After installation the integration allows for the following configuration parameters to be changed:
 
-- `Very frequent polling interval`: The polling interval in seconds for entities updated very frequently, defaults to `5`.
+- `Very frequent polling interval`: The polling interval in seconds for entities updated very frequently, defaults to `30`.
 - `Frequent polling interval`: The polling interval in seconds for entities updated frequently, defaults to `30`.
 - `Infrequent polling interval`: The polling interval in seconds for entities updated infrequently, defaults to `180`.
 - `Static polling interval`: The polling interval in seconds for entities updated seldomly, defaults to `3600`.
+
+Only lower the very frequent polling interval (for example, to `5` seconds) after
+disabling entities you do not need. See [Reducing communication
+load](#reducing-communication-load). A shorter interval for the `Battery Power`
+and `Grid Power` entities may be useful for a PV-surplus EV charging setup.
 
 ## Usage with the built-in energy dashboard
 
@@ -109,7 +114,7 @@ depending on your preference.
 | Island Flag                                  |      | the raw numeric flag reported by the inverter; value meanings are not yet established | frequent          |
 | Grid Frequency                               | Hz   | the instantaneous overall grid frequency                                              | frequent          |
 | Grid Frequency P1/P2/P3                      | Hz   | the instantaneous grid frequency on phase 1/2/3                                       | frequent          |
-| Grid Power                                   | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the grid            | frequent          |
+| Grid Power                                   | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the grid            | very frequent     |
 | Grid Power P1/P2/P3                          | W    | the instantaneous power consumed from or fed into the grid on phase 1/2/3             | frequent          |
 | Grid Voltage P1/P2/P3                        | W    | the instantaneous grid voltage on phase 1/2/3                                         | frequent          |
 | Grid Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed from the grid                                          | infrequent        |

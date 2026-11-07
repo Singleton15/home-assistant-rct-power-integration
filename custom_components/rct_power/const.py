@@ -51,7 +51,7 @@ class ConfScanInterval(StrEnum):
 
 
 class ScanIntervalDefault(IntEnum):
-    VERY_FREQUENT = 5
+    VERY_FREQUENT = 30
     FREQUENT = 30
     INFREQUENT = 60 * 3
     STATIC = 60 * 60
