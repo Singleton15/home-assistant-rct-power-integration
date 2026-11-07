@@ -110,6 +110,10 @@ CONFIG_FLOW_SCHEMA = vol.Schema(
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(
+            ConfScanInterval.VERY_FREQUENT.value,
+            default=ScanIntervalDefault.VERY_FREQUENT,
+        ): cv.positive_int,
+        vol.Optional(
             ConfScanInterval.FREQUENT.value, default=ScanIntervalDefault.FREQUENT
         ): cv.positive_int,
         vol.Optional(

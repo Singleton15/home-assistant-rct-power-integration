@@ -951,6 +951,7 @@ inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         get_device_info=get_inverter_device_info,
         key="g_sync.p_acc_lp",
         name="Battery Power",
+        update_priority=EntityUpdatePriority.VERY_FREQUENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RctPowerSensorEntityDescription(

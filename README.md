@@ -47,6 +47,7 @@ Upon installation the integration accepts the following configuration parameters
 
 After installation the integration allows for the following configuration parameters to be changed:
 
+- `Very frequent polling interval`: The polling interval in seconds for entities updated very frequently, defaults to `5`.
 - `Frequent polling interval`: The polling interval in seconds for entities updated frequently, defaults to `30`.
 - `Infrequent polling interval`: The polling interval in seconds for entities updated infrequently, defaults to `180`.
 - `Static polling interval`: The polling interval in seconds for entities updated seldomly, defaults to `3600`.
@@ -123,7 +124,7 @@ depending on your preference.
 | Battery Management System Software Version    |      | the software version reported by the battery management system                | static            |
 | Battery Charge Total                          | Ah   | the cumulative amp-hours charged into the battery                             | infrequent        |
 | Battery Discharge Total                       | Ah   | the cumulative amp-hours discharged from the battery                          | infrequent        |
-| Battery Power                                 | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the battery | frequent          |
+| Battery Power                                 | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the battery | very frequent     |
 | Battery Current                               | A    | the instantaneous current flowing from or to the battery                      | frequent          |
 | Battery Voltage                               | V    | the instantaneous voltage of the battery                                      | frequent          |
 | Battery Maximum Charging Voltage              | V    | the maximum charging voltage reported by the battery                          | frequent          |

@@ -91,6 +91,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         )
     }
 
+    very_frequent_update_coordinator = RctPowerDataUpdateCoordinator(
+        hass=hass,
+        entry=entry,
+        client=client,
+        name_suffix="very_frequent",
+        object_ids=object_ids_for_update_priority(
+            EntityUpdatePriority.VERY_FREQUENT,
+            entry.entry_id,
+            entity_enabled_by_unique_id,
+        ),
+        update_interval=options.get(
+            ConfScanInterval.VERY_FREQUENT, ScanIntervalDefault.VERY_FREQUENT
+        ),
+    )
+
     frequent_update_coordinator = RctPowerDataUpdateCoordinator(
         hass=hass,
         entry=entry,
@@ -136,12 +151,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         ),
     )
 
+    await very_frequent_update_coordinator.async_config_entry_first_refresh()
     await frequent_update_coordinator.async_config_entry_first_refresh()
     await infrequent_update_coordinator.async_config_entry_first_refresh()
     await static_update_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = RctData(
         {
+            EntityUpdatePriority.VERY_FREQUENT: very_frequent_update_coordinator,
             EntityUpdatePriority.FREQUENT: frequent_update_coordinator,
             EntityUpdatePriority.INFREQUENT: infrequent_update_coordinator,
             EntityUpdatePriority.STATIC: static_update_coordinator,
