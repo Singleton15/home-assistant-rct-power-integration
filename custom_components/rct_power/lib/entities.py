@@ -719,6 +719,12 @@ battery_cell_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] =
 inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
     RctPowerSensorEntityDescription(
         get_device_info=get_inverter_device_info,
+        key="prim_sm.island_flag",
+        name="Island Flag",
+        update_priority=EntityUpdatePriority.FREQUENT,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
         key="adc.u_acc",
         name="Inverter Battery Voltage",
         state_class=SensorStateClass.MEASUREMENT,

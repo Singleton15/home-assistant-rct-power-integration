@@ -104,17 +104,18 @@ depending on your preference.
 
 ### Grid
 
-| Entity name                                  | Unit | Description                                                                      | Polling frequency |
-| -------------------------------------------- | ---- | -------------------------------------------------------------------------------- | ----------------- |
-| Grid Frequency                               | Hz   | the instantaneous overall grid frequency                                         | frequent          |
-| Grid Frequency P1/P2/P3                      | Hz   | the instantaneous grid frequency on phase 1/2/3                                  | frequent          |
-| Grid Power                                   | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the grid       | frequent          |
-| Grid Power P1/P2/P3                          | W    | the instantaneous power consumed from or fed into the grid on phase 1/2/3        | frequent          |
-| Grid Voltage P1/P2/P3                        | W    | the instantaneous grid voltage on phase 1/2/3                                    | frequent          |
-| Grid Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed from the grid                                     | infrequent        |
-| Grid Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy fed into the grid                                          | infrequent        |
-| Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation | infrequent        |
-| Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid               | static            |
+| Entity name                                  | Unit | Description                                                                           | Polling frequency |
+| -------------------------------------------- | ---- | ------------------------------------------------------------------------------------- | ----------------- |
+| Island Flag                                  |      | the raw numeric flag reported by the inverter; value meanings are not yet established | frequent          |
+| Grid Frequency                               | Hz   | the instantaneous overall grid frequency                                              | frequent          |
+| Grid Frequency P1/P2/P3                      | Hz   | the instantaneous grid frequency on phase 1/2/3                                       | frequent          |
+| Grid Power                                   | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the grid            | frequent          |
+| Grid Power P1/P2/P3                          | W    | the instantaneous power consumed from or fed into the grid on phase 1/2/3             | frequent          |
+| Grid Voltage P1/P2/P3                        | W    | the instantaneous grid voltage on phase 1/2/3                                         | frequent          |
+| Grid Energy Consumption Day/Month/Year/Total | Wh   | the cumulative energy consumed from the grid                                          | infrequent        |
+| Grid Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy fed into the grid                                               | infrequent        |
+| Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation      | infrequent        |
+| Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid                    | static            |
 
 ### Battery
 
