@@ -162,6 +162,7 @@ async def test_write_battery_external_power(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == "0.0"
     assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["step"] == 1
 
     with patch(
         "custom_components.rct_power.RctPowerApiClient.async_write_value",

@@ -121,7 +121,7 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         native_unit_of_measurement=UnitOfPower.WATT,
         native_min_value=-10000,
         native_max_value=10000,
-        native_step=100,
+        native_step=1,
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
