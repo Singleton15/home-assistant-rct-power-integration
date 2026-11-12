@@ -83,6 +83,17 @@ def get_first_api_response_value_as_bool(
             return None
 
 
+def get_first_api_response_value_as_enum(
+    entity: Any,
+    values: list[ApiResponseValue | None],
+) -> str | None:
+    match values:
+        case [int() as first_value, *_]:
+            return entity.object_infos[0].enum_map.get(first_value)
+        case _:
+            return None
+
+
 def sum_api_response_values_as_state(
     entity: SensorEntity,
     values: list[ApiResponseValue | None],

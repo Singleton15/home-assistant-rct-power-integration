@@ -41,7 +41,10 @@ TARGET_ID = REGISTRY.get_by_name("power_mng.soc_target_set").object_id
 MIN_SOC_ID = REGISTRY.get_by_name("power_mng.soc_min").object_id
 MAX_SOC_ID = REGISTRY.get_by_name("power_mng.soc_max").object_id
 POWER_ID = REGISTRY.get_by_name("power_mng.battery_power_extern").object_id
+MODBUS_MODE_ID = REGISTRY.get_by_name("modbus.mode").object_id
 SELECT_ENTITY_ID = "select.battery_at_master_master_battery_state_of_charge_strategy"
+MODBUS_MODE_SELECT_ENTITY_ID = "select.master_rs485_modbus_mode"
+MODBUS_MODE_SENSOR_ENTITY_ID = "sensor.master_rs485_modbus_mode"
 NUMBER_ENTITY_ID = "number.battery_at_master_master_battery_external_power"
 MIN_SOC_ENTITY_ID = "number.battery_at_master_master_battery_minimum_state_of_charge"
 MAX_SOC_ENTITY_ID = "number.battery_at_master_master_battery_maximum_state_of_charge"
@@ -71,6 +74,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(object_id, 0.95)
         elif object_id == POWER_ID:
             data[object_id] = response(object_id, 0.0)
+        elif object_id == MODBUS_MODE_ID:
+            data[object_id] = response(object_id, 0)
     return data
 
 
@@ -94,11 +99,13 @@ async def setup(hass: HomeAssistant, options: dict) -> None:
         await hass.async_block_till_done()
 
 
-async def select_option(hass: HomeAssistant, option: str) -> None:
+async def select_option(
+    hass: HomeAssistant, option: str, entity_id: str = SELECT_ENTITY_ID
+) -> None:
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
         blocking=True,
     )
 
@@ -106,9 +113,38 @@ async def select_option(hass: HomeAssistant, option: str) -> None:
 async def test_no_select_without_allow_battery_writes(hass: HomeAssistant) -> None:
     """The power reduction option alone does not allow battery settings."""
     await setup(hass, {CONF_ALLOW_WRITES: True})
-    assert hass.states.async_all(SELECT_DOMAIN) == []
+    assert hass.states.get(SELECT_ENTITY_ID) is None
+    assert hass.states.get(MODBUS_MODE_SELECT_ENTITY_ID) is not None
     assert hass.states.get(NUMBER_ENTITY_ID) is None
     assert hass.states.get("number.master_external_power_reduction") is not None
+
+
+async def test_read_modbus_mode_without_writes(hass: HomeAssistant) -> None:
+    await setup(hass, {})
+
+    state = hass.states.get(MODBUS_MODE_SENSOR_ENTITY_ID)
+    assert state is not None
+    assert state.state == "Modbus slave"
+    assert state.attributes["options"] == ["Modbus slave", "Modbus master"]
+    assert hass.states.get(MODBUS_MODE_SELECT_ENTITY_ID) is None
+
+
+async def test_write_modbus_mode(hass: HomeAssistant) -> None:
+    await setup(hass, {CONF_ALLOW_WRITES: True})
+
+    state = hass.states.get(MODBUS_MODE_SELECT_ENTITY_ID)
+    assert state is not None
+    assert state.state == "Modbus slave"
+    assert "Modbus master" in state.attributes["options"]
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=response),
+    ) as write:
+        await select_option(hass, "Modbus master", MODBUS_MODE_SELECT_ENTITY_ID)
+        write.assert_awaited_once_with(MODBUS_MODE_ID, 1)
+
+    assert hass.states.get(MODBUS_MODE_SELECT_ENTITY_ID).state == "Modbus master"  # type: ignore
 
 
 async def test_write_soc_strategy(hass: HomeAssistant) -> None:

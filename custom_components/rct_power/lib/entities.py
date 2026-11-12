@@ -56,6 +56,7 @@ from .state_helpers import (
     get_first_api_response_value_as_absolute_state,
     get_first_api_response_value_as_battery_status,
     get_first_api_response_value_as_bool,
+    get_first_api_response_value_as_enum,
     get_first_api_response_value_as_timestamp,
     is_battery_balancing,
     is_battery_calibrating,
@@ -717,6 +718,17 @@ battery_cell_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] =
 ]
 
 inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="modbus.mode",
+        unique_id="modbus_mode_sensor",
+        name="RS485 Modbus Mode",
+        update_priority=EntityUpdatePriority.INFREQUENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=list((REGISTRY.get_by_name("modbus.mode").enum_map or {}).values()),
+        get_native_value=get_first_api_response_value_as_enum,
+    ),
     RctPowerSensorEntityDescription(
         get_device_info=get_inverter_device_info,
         key="prim_sm.island_flag",

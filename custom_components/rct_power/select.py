@@ -11,10 +11,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
+from rctclient.registry import REGISTRY
 
 from . import RctConfigEntry
-from .const import CONF_ALLOW_BATTERY_WRITES, EntityUpdatePriority
-from .lib.device_info_helpers import get_battery_device_info
+from .const import CONF_ALLOW_BATTERY_WRITES, CONF_ALLOW_WRITES, EntityUpdatePriority
+from .lib.device_info_helpers import get_battery_device_info, get_inverter_device_info
 from .lib.entity import RctPowerEntity, RctPowerEntityDescription
 from .models import RctConfEntryOptions
 
@@ -40,6 +41,16 @@ select_entity_descriptions: list[RctPowerSelectEntityDescription] = [
         icon="mdi:battery-charging-high",
         update_priority=EntityUpdatePriority.INFREQUENT,
         options=SOC_STRATEGIES,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RctPowerSelectEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="modbus.mode",
+        unique_id="modbus_mode_select",
+        name="RS485 Modbus Mode",
+        icon="mdi:swap-horizontal",
+        update_priority=EntityUpdatePriority.INFREQUENT,
+        options=list((REGISTRY.get_by_name("modbus.mode").enum_map or {}).values()),
         entity_category=EntityCategory.CONFIG,
     ),
 ]
@@ -86,10 +97,14 @@ async def async_setup_entry(
     """Setup select platform, only if writing is allowed for this inverter."""
     options = cast(RctConfEntryOptions, entry.options)
 
-    if not options.get(CONF_ALLOW_BATTERY_WRITES, False):
-        return
-
     data = entry.runtime_data
+    entity_descriptions: list[RctPowerSelectEntityDescription] = []
+
+    if options.get(CONF_ALLOW_BATTERY_WRITES, False):
+        entity_descriptions.append(select_entity_descriptions[0])
+
+    if options.get(CONF_ALLOW_WRITES, False):
+        entity_descriptions.append(select_entity_descriptions[1])
 
     async_add_entities(
         [
@@ -98,6 +113,6 @@ async def async_setup_entry(
                 config_entry=entry,
                 entity_description=entity_description,
             )
-            for entity_description in select_entity_descriptions
+            for entity_description in entity_descriptions
         ]
     )
