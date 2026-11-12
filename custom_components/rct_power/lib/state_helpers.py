@@ -30,6 +30,16 @@ def get_first_api_response_value_as_state(
     return get_api_response_value_as_state(entity=entity, value=values[0])
 
 
+def get_first_api_response_value_as_float(
+    entity: SensorEntity,
+    values: list[ApiResponseValue | None],
+) -> float | None:
+    if values and isinstance(values[0], float):
+        return values[0]
+
+    return None
+
+
 def get_api_response_value_as_state(
     entity: SensorEntity,
     value: ApiResponseValue | None,

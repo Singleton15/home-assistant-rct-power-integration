@@ -13,7 +13,6 @@ from datetime import UTC, datetime
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from rctclient.exceptions import FrameCRCMismatch, FrameLengthExceeded, InvalidCommand
 from rctclient.frame import ReceiveFrame, SendFrame
-from rctclient.registry import REGISTRY
 from rctclient.types import (
     BatteryModuleResistance,
     BatteryModuleStatistics,
@@ -25,6 +24,7 @@ from rctclient.types import (
 from rctclient.utils import decode_value, encode_value
 
 from ..const import LOGGER
+from .registry import REGISTRY
 
 CONNECTION_TIMEOUT = 20
 READ_TIMEOUT = 2

@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
-from rctclient.registry import REGISTRY, ObjectInfo
+from rctclient.registry import ObjectInfo
 
 from ..const import CONF_ENTITY_PREFIX, ICON, EntityUpdatePriority
 from ..coordinator import RctPowerDataUpdateCoordinator
@@ -34,6 +34,7 @@ from .api import (
 )
 from .device_class_helpers import guess_device_class_from_unit
 from .multi_coordinator_entity import MultiCoordinatorEntity
+from .registry import REGISTRY
 from .state_helpers import (
     get_api_response_values_as_bitfield,
     get_first_api_response_value_as_state,

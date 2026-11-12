@@ -24,7 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from rctclient.registry import REGISTRY
 
 from custom_components.rct_power.const import (
     CONF_ALLOW_BATTERY_WRITES,
@@ -35,6 +34,7 @@ from custom_components.rct_power.const import (
     DOMAIN,
 )
 from custom_components.rct_power.lib.api import RctPowerData, ValidApiResponse
+from custom_components.rct_power.lib.registry import REGISTRY
 
 STRATEGY_ID = REGISTRY.get_by_name("power_mng.soc_strategy").object_id
 TARGET_ID = REGISTRY.get_by_name("power_mng.soc_target_set").object_id

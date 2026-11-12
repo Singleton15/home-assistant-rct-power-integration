@@ -13,7 +13,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from rctclient.registry import REGISTRY
 
 from ..const import BATTERY_MODULE_COUNT, EntityUpdatePriority
 from .battery_module_helpers import (
@@ -51,12 +50,14 @@ from .entity import (
     RctPowerEntity,
     RctPowerSensorEntityDescription,
 )
+from .registry import REGISTRY
 from .state_helpers import (
     available_battery_status,
     get_first_api_response_value_as_absolute_state,
     get_first_api_response_value_as_battery_status,
     get_first_api_response_value_as_bool,
     get_first_api_response_value_as_enum,
+    get_first_api_response_value_as_float,
     get_first_api_response_value_as_timestamp,
     is_battery_balancing,
     is_battery_calibrating,
@@ -940,6 +941,57 @@ inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         name="Inverter Power P3",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="W",
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="phase_power_offset[0]",
+        name="Power Sensor Phase 1 Offset Correction",
+        update_priority=EntityUpdatePriority.STATIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=3,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="phase_power_offset[1]",
+        name="Power Sensor Phase 2 Offset Correction",
+        update_priority=EntityUpdatePriority.STATIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=3,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="phase_power_offset[2]",
+        name="Power Sensor Phase 3 Offset Correction",
+        update_priority=EntityUpdatePriority.STATIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=3,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="csc[0].gain",
+        name="Power Sensor Phase 1 Gain Correction",
+        update_priority=EntityUpdatePriority.STATIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=6,
+        get_native_value=get_first_api_response_value_as_float,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="csc[1].gain",
+        name="Power Sensor Phase 2 Gain Correction",
+        update_priority=EntityUpdatePriority.STATIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=6,
+        get_native_value=get_first_api_response_value_as_float,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="csc[2].gain",
+        name="Power Sensor Phase 3 Gain Correction",
+        update_priority=EntityUpdatePriority.STATIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=6,
+        get_native_value=get_first_api_response_value_as_float,
     ),
     RctPowerSensorEntityDescription(
         get_device_info=get_inverter_device_info,

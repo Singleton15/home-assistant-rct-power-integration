@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import struct
 from datetime import UTC, datetime
 from unittest.mock import patch
 
@@ -11,7 +12,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from rctclient.registry import REGISTRY
 from rctclient.utils import decode_value
 
 from custom_components.rct_power import async_remove_config_entry_device
@@ -35,6 +35,7 @@ from custom_components.rct_power.lib.battery_module_helpers_test import (
     encode_module_resistance,
     encode_module_status,
 )
+from custom_components.rct_power.lib.registry import REGISTRY
 
 RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "inverter_sn": "INV1",
@@ -48,6 +49,12 @@ RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "battery_placeholder[0].max_cell_voltage": 3.312,
     "battery_placeholder[0].soc": 0.42,
     "battery_placeholder[0].voltage": 463.9,
+    "phase_power_offset[0]": struct.pack(">f", 0.5),
+    "phase_power_offset[1]": struct.pack(">f", -1.5),
+    "phase_power_offset[2]": struct.pack(">f", 2.5),
+    "csc[0].gain": struct.pack(">f", 0.999758),
+    "csc[1].gain": struct.pack(">f", 1.000246),
+    "csc[2].gain": struct.pack(">f", 0.998765),
     # tower 2 is disconnected from the DC bus, tower 1 is balancing
     "adc.u_acc": 479.4,
     "battery.voltage": 479.3,
@@ -196,6 +203,28 @@ async def test_battery_module_sensors(
             EntityUpdatePriority.FREQUENT
         ].object_ids
     )
+
+    for phase, object_id, expected_value in (
+        (1, 0x8114F393, 0.5),
+        (2, 0x9521F6C7, -1.5),
+        (3, 0xEED7904F, 2.5),
+    ):
+        assert (
+            REGISTRY.get_by_name(f"phase_power_offset[{phase - 1}]").object_id
+            == object_id
+        )
+        state = get_state(hass, f"power_sensor_phase_{phase}_offset_correction")
+        assert float(state.state) == pytest.approx(expected_value)
+
+    for phase, object_id, expected_value in (
+        (1, 0x6A9A9FED, 0.999758),
+        (2, 0x93FAD04A, 1.000246),
+        (3, 0x86ABDAC9, 0.998765),
+    ):
+        assert REGISTRY.get_by_name(f"csc[{phase - 1}].gain").object_id == object_id
+        state = get_state(hass, f"power_sensor_phase_{phase}_gain_correction")
+        assert float(state.state) == pytest.approx(expected_value, abs=1e-6)
+        assert state.state != "1.0"
 
     state = get_state(hass, "external_energy_production_total")
     assert state.state == "unknown"

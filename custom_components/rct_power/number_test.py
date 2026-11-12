@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from rctclient.registry import REGISTRY
 
 from custom_components.rct_power.const import (
     CONF_ALLOW_WRITES,
@@ -28,6 +27,7 @@ from custom_components.rct_power.const import (
     DOMAIN,
 )
 from custom_components.rct_power.lib.api import RctPowerData, ValidApiResponse
+from custom_components.rct_power.lib.registry import REGISTRY
 
 REDUCTION_ID = REGISTRY.get_by_name("buf_v_control.power_reduction").object_id
 ENTITY_ID = "number.master_external_power_reduction"

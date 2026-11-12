@@ -8,11 +8,11 @@ from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from rctclient.registry import REGISTRY
 
 from . import RctConfigEntry
 from .const import CONF_HOSTNAME
 from .lib.api import ValidApiResponse
+from .lib.registry import REGISTRY
 
 TO_REDACT = {CONF_HOSTNAME}
 
