@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 from typing import Any
 
 import homeassistant.helpers.config_validation as cv
@@ -10,13 +12,14 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_ALLOW_BATTERY_WRITES,
     CONF_ALLOW_WRITES,
     CONF_ENTITY_PREFIX,
     CONF_GOD_MODE,
-    CONF_GOD_MODE_CONFIRMATION,
+    CONF_GOD_MODE_PASSWORD,
     CONF_HOSTNAME,
     CONF_RESTART_SERIAL_NUMBER,
     DEFAULT_ENTITY_PREFIX,
@@ -26,6 +29,23 @@ from .const import (
     ScanIntervalDefault,
 )
 from .lib.api import RctPowerApiClient
+
+_GOD_MODE_PASSWORD_SALT = bytes.fromhex("526b10a48ca2761a205d3ce91ed79293")
+_GOD_MODE_PASSWORD_HASH = bytes.fromhex(
+    "95f68bc7aaebd8ae37f925ecca6505425097a8ea49147a2aa7fce5b82cfd4125"
+)
+_GOD_MODE_PASSWORD_ITERATIONS = 600_000
+
+
+def _verify_god_mode_password(password: str) -> bool:
+    """Verify the God mode password against its salted key derivation."""
+    candidate_hash = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode(),
+        _GOD_MODE_PASSWORD_SALT,
+        _GOD_MODE_PASSWORD_ITERATIONS,
+    )
+    return hmac.compare_digest(candidate_hash, _GOD_MODE_PASSWORD_HASH)
 
 
 class RctPowerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -118,15 +138,24 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            if user_input.get(CONF_GOD_MODE_CONFIRMATION, False):
+            if await self.hass.async_add_executor_job(
+                _verify_god_mode_password,
+                user_input[CONF_GOD_MODE_PASSWORD],
+            ):
                 assert self._pending_options is not None
                 return self.async_create_entry(data=self._pending_options)
-            errors["base"] = "confirmation_required"
+            errors["base"] = "invalid_password"
 
         return self.async_show_form(
             step_id="confirm_god_mode",
             data_schema=vol.Schema(
-                {vol.Required(CONF_GOD_MODE_CONFIRMATION, default=False): bool}
+                {
+                    vol.Required(CONF_GOD_MODE_PASSWORD): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD
+                        )
+                    )
+                }
             ),
             errors=errors,
         )
