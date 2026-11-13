@@ -14,7 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 
@@ -22,6 +22,7 @@ from . import RctConfigEntry
 from .const import (
     CONF_ALLOW_BATTERY_WRITES,
     CONF_ALLOW_WRITES,
+    CONF_GOD_MODE,
     DOMAIN,
     EntityUpdatePriority,
 )
@@ -44,6 +45,21 @@ class RctPowerNumberEntityDescription(
 
 
 number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
+    *[
+        RctPowerNumberEntityDescription(
+            get_device_info=get_inverter_device_info,
+            key=f"phase_power_offset[{phase}]",
+            name=f"Power Sensor Phase {phase + 1} Offset Correction",
+            write_option=CONF_GOD_MODE,
+            update_priority=EntityUpdatePriority.STATIC,
+            native_min_value=0,
+            native_max_value=50,
+            native_step=1,
+            mode=NumberMode.BOX,
+            entity_category=EntityCategory.CONFIG,
+        )
+        for phase in range(3)
+    ],
     # the inverter takes a fraction of the solar plant peak power
     RctPowerNumberEntityDescription(
         get_device_info=get_inverter_device_info,
@@ -141,6 +157,15 @@ class RctPowerNumberEntity(NumberEntity, RctPowerEntity):
         return None
 
     async def async_set_native_value(self, value: float) -> None:
+        step = self.entity_description.native_step
+        minimum = self.entity_description.native_min_value
+        if step is not None and minimum is not None and step > 0:
+            step_index = (value - minimum) / step
+            if not math.isclose(step_index, round(step_index), abs_tol=1e-9):
+                raise ServiceValidationError(
+                    f"{self.name} must be set in increments of {step}"
+                )
+
         tolerance = min(0.5, (self.entity_description.native_step or 1) / 2)
 
         # the inverter stores the setting permanently, so avoid needless writes

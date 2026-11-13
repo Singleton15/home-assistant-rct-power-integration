@@ -22,6 +22,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.rct_power.const import (
     CONF_ALLOW_WRITES,
     CONF_ENTITY_PREFIX,
+    CONF_GOD_MODE,
     CONF_HOSTNAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -31,11 +32,14 @@ from custom_components.rct_power.lib.registry import REGISTRY
 
 REDUCTION_ID = REGISTRY.get_by_name("buf_v_control.power_reduction").object_id
 ENTITY_ID = "number.master_external_power_reduction"
+PHASE_OFFSET_OBJECT_IDS = [
+    REGISTRY.get_by_name(f"phase_power_offset[{phase}]").object_id for phase in range(3)
+]
 
 
-def response(value: float) -> ValidApiResponse:
+def response(value: float, object_id: int = REDUCTION_ID) -> ValidApiResponse:
     return ValidApiResponse(
-        object_id=REDUCTION_ID, time=datetime.now(tz=UTC), value=value, raw=None
+        object_id=object_id, time=datetime.now(tz=UTC), value=value, raw=None
     )
 
 
@@ -53,6 +57,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             )
         elif object_id == REDUCTION_ID:
             data[object_id] = response(1.0)
+        elif object_id in PHASE_OFFSET_OBJECT_IDS:
+            data[object_id] = response(10.0, object_id)
     return data
 
 
@@ -80,11 +86,15 @@ async def setup(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
         await hass.async_block_till_done()
 
 
-async def set_value(hass: HomeAssistant, value: float) -> None:
+async def set_value(
+    hass: HomeAssistant,
+    value: float,
+    entity_id: str = ENTITY_ID,
+) -> None:
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: value},
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
         blocking=True,
     )
 
@@ -92,6 +102,60 @@ async def set_value(hass: HomeAssistant, value: float) -> None:
 async def test_no_number_without_allow_writes(hass: HomeAssistant) -> None:
     await setup(hass, create_entry(hass, {}))
     assert hass.states.async_all(NUMBER_DOMAIN) == []
+
+
+async def test_phase_offset_numbers_require_god_mode(hass: HomeAssistant) -> None:
+    """Regular write permission does not expose the God mode offset controls."""
+    await setup(hass, create_entry(hass, {CONF_ALLOW_WRITES: True}))
+
+    for phase in range(1, 4):
+        assert (
+            hass.states.get(
+                f"number.master_power_sensor_phase_{phase}_offset_correction"
+            )
+            is None
+        )
+
+
+@pytest.mark.parametrize(
+    ("phase", "object_id"),
+    [
+        (1, PHASE_OFFSET_OBJECT_IDS[0]),
+        (2, PHASE_OFFSET_OBJECT_IDS[1]),
+        (3, PHASE_OFFSET_OBJECT_IDS[2]),
+    ],
+)
+async def test_write_phase_power_offset(
+    hass: HomeAssistant,
+    phase: int,
+    object_id: int,
+) -> None:
+    """Write a phase offset only with God mode and enforce its range and step."""
+    await setup(hass, create_entry(hass, {CONF_GOD_MODE: True}))
+    entity_id = f"number.master_power_sensor_phase_{phase}_offset_correction"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "10.0"
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 50
+    assert state.attributes["step"] == 1
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=lambda obj_id, value: response(value, obj_id)),
+    ) as write:
+        await set_value(hass, 20, entity_id)
+        write.assert_awaited_once_with(object_id, 20)
+
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 51, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, -1, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 20.5, entity_id)
+
+    assert hass.states.get(entity_id).state == "20.0"  # type: ignore
 
 
 async def test_write_external_power_reduction(hass: HomeAssistant) -> None:
