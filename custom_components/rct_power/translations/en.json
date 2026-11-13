@@ -29,9 +29,22 @@
           "static_scan_interval": "Static polling interval (s)",
           "allow_writes": "Allow changing inverter settings",
           "allow_battery_writes": "Allow changing the battery settings of this inverter",
+          "god_mode": "God mode",
           "restart_serial_number": "Inverter serial number for communication restart"
+        },
+        "data_description": {
+          "god_mode": "⚠️ Danger Zone, this enables write support for parameters that might void the warranty!"
+        }
+      },
+      "confirm_god_mode": {
+        "description": "⚠️ Warning, this enables write support for parameters that might void the warranty! These settings are not available in installer mode of the RCT Power App but only in its god mode. Confirm that you understand before continuing.",
+        "data": {
+          "confirm_god_mode": "I understand and want to enable God mode"
         }
       }
+    },
+    "error": {
+      "confirmation_required": "You must acknowledge the warning to enable God mode."
     }
   }
 }

@@ -15,6 +15,8 @@ from .const import (
     CONF_ALLOW_BATTERY_WRITES,
     CONF_ALLOW_WRITES,
     CONF_ENTITY_PREFIX,
+    CONF_GOD_MODE,
+    CONF_GOD_MODE_CONFIRMATION,
     CONF_HOSTNAME,
     CONF_RESTART_SERIAL_NUMBER,
     DEFAULT_ENTITY_PREFIX,
@@ -79,6 +81,8 @@ class RctPowerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options handler for rct_power."""
 
+    _pending_options: dict[str, Any] | None = None
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -89,6 +93,11 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         if user_input is not None:
+            if user_input.get(
+                CONF_GOD_MODE, False
+            ) and not self.config_entry.options.get(CONF_GOD_MODE, False):
+                self._pending_options = user_input
+                return await self.async_step_confirm_god_mode()
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
@@ -102,6 +111,24 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 },
             ),
+        )
+
+    async def async_step_confirm_god_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if user_input.get(CONF_GOD_MODE_CONFIRMATION, False):
+                assert self._pending_options is not None
+                return self.async_create_entry(data=self._pending_options)
+            errors["base"] = "confirmation_required"
+
+        return self.async_show_form(
+            step_id="confirm_god_mode",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_GOD_MODE_CONFIRMATION, default=False): bool}
+            ),
+            errors=errors,
         )
 
 
@@ -133,6 +160,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALLOW_WRITES, default=False): bool,
         # every inverter keeps its own battery settings
         vol.Optional(CONF_ALLOW_BATTERY_WRITES, default=False): bool,
+        vol.Optional(CONF_GOD_MODE, default=False): bool,
         vol.Optional(CONF_RESTART_SERIAL_NUMBER): vol.All(str, vol.Length(min=1)),
     }
 )

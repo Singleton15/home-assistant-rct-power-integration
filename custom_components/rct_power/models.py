@@ -14,4 +14,5 @@ class RctConfEntryOptions(TypedDict, total=False):
     static_scan_interval: int
     allow_writes: bool
     allow_battery_writes: bool
+    god_mode: bool
     restart_serial_number: str
