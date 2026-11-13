@@ -17,6 +17,7 @@ from rctclient.utils import decode_value
 from custom_components.rct_power import async_remove_config_entry_device
 from custom_components.rct_power.const import (
     CONF_ENTITY_PREFIX,
+    CONF_GOD_MODE,
     CONF_HOSTNAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -113,6 +114,7 @@ async def test_battery_module_sensors(
             CONF_PORT: DEFAULT_PORT,
             CONF_ENTITY_PREFIX: "Master",
         },
+        options={CONF_GOD_MODE: True},
         entry_id="test",
     )
     config_entry.add_to_hass(hass)
@@ -245,6 +247,53 @@ async def test_battery_module_sensors(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "None")}
     )
     assert await async_remove_config_entry_device(hass, config_entry, orphan)
+
+
+async def test_power_sensor_correction_sensors_require_god_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Do not create or poll power sensor correction sensors unless enabled."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOSTNAME: "localhost",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_ENTITY_PREFIX: "Master",
+        },
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    requested_object_ids: set[int] = set()
+
+    async def no_data(object_ids: list[int]) -> RctPowerData:
+        requested_object_ids.update(object_ids)
+        return {}
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_get_data",
+        side_effect=no_data,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    correction_names = [
+        *(f"phase_power_offset[{phase}]" for phase in range(3)),
+        *(f"csc[{phase}].gain" for phase in range(3)),
+    ]
+    correction_object_ids = {
+        REGISTRY.get_by_name(name).object_id for name in correction_names
+    }
+    assert requested_object_ids.isdisjoint(correction_object_ids)
+    assert not any(
+        entity_entry.entity_id.endswith(
+            f"power_sensor_phase_{phase}_{correction_type}_correction"
+        )
+        for entity_entry in er.async_entries_for_config_entry(
+            er.async_get(hass), config_entry.entry_id
+        )
+        for phase in range(1, 4)
+        for correction_type in ("offset", "gain")
+    )
 
 
 async def test_device_without_serial_numbers(hass: HomeAssistant) -> None:

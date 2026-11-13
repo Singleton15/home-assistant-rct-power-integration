@@ -28,6 +28,7 @@ from custom_components.rct_power.const import (
     DOMAIN,
     RESTART_WAIT_SECONDS,
     SERVICE_RESTART_COMMUNICATION,
+    EntityUpdatePriority,
 )
 from custom_components.rct_power.lib.entities import all_entity_descriptions
 from custom_components.rct_power.lib.entity import resolve_object_infos
@@ -108,6 +109,35 @@ def test_object_ids_includes_user_enabled_default_disabled_entity(
     ) == {
         object_info.object_id
         for object_info in resolve_object_infos(entity_description)
+    }
+
+
+def test_god_mode_object_ids_are_only_polled_when_enabled(monkeypatch) -> None:
+    """God mode correction values are excluded from polling by default."""
+    descriptions = [
+        description
+        for description in all_entity_descriptions
+        if description.requires_god_mode
+    ]
+    assert len(descriptions) == 6
+    monkeypatch.setattr(
+        "custom_components.rct_power.all_entity_descriptions", descriptions
+    )
+
+    assert (
+        object_ids_for_update_priority(
+            EntityUpdatePriority.STATIC, "test-entry", {}, god_mode_enabled=False
+        )
+        == []
+    )
+    assert set(
+        object_ids_for_update_priority(
+            EntityUpdatePriority.STATIC, "test-entry", {}, god_mode_enabled=True
+        )
+    ) == {
+        object_info.object_id
+        for description in descriptions
+        for object_info in resolve_object_infos(description)
     }
 
 

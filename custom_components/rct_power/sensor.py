@@ -9,6 +9,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from . import RctConfigEntry
+from .const import CONF_GOD_MODE
 from .lib.device_info_helpers import get_inverter_device_info
 from .lib.entities import (
     battery_cell_sensor_entity_descriptions,
@@ -67,6 +68,8 @@ async def async_setup_entry(
             entity_description=entity_description,
         )
         for entity_description in inverter_sensor_entity_descriptions
+        if entry.options.get(CONF_GOD_MODE, False)
+        or not entity_description.requires_god_mode
     ]
 
     bitfield_sensor_entities = [

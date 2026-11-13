@@ -25,6 +25,7 @@ from homeassistant.util.hass_dict import HassEntryKey
 
 from .const import (
     CONF_CONFIG_ENTRY_ID,
+    CONF_GOD_MODE,
     CONF_HOSTNAME,
     CONF_RESTART_SERIAL_NUMBER,
     DOMAIN,
@@ -56,6 +57,7 @@ def object_ids_for_update_priority(
     update_priority: EntityUpdatePriority,
     entry_id: str,
     entity_enabled_by_unique_id: dict[str, bool],
+    god_mode_enabled: bool = False,
 ) -> list[int]:
     """Collect object IDs needed by enabled entities for an update priority."""
     return list(
@@ -63,6 +65,7 @@ def object_ids_for_update_priority(
             object_info.object_id
             for entity_description in all_entity_descriptions
             if entity_description.update_priority == update_priority
+            and (god_mode_enabled or not entity_description.requires_god_mode)
             and entity_enabled_by_unique_id.get(
                 _entity_unique_id(entry_id, entity_description),
                 entity_description.entity_registry_enabled_default is not False,
@@ -91,9 +94,7 @@ async def _async_send_restart_request(
     session = async_get_clientsession(hass)
     async with session.get(
         f"http://{entry.data[CONF_HOSTNAME]}/EN/restart.html",
-        headers={
-            "Authorization": aiohttp.encode_basic_auth("admin", serial_number)
-        },
+        headers={"Authorization": aiohttp.encode_basic_auth("admin", serial_number)},
         timeout=aiohttp.ClientTimeout(total=10),
     ) as response:
         response.raise_for_status()
@@ -178,6 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
             entity_registry, entry.entry_id
         )
     }
+    god_mode_enabled = options.get(CONF_GOD_MODE, False)
 
     very_frequent_update_coordinator = RctPowerDataUpdateCoordinator(
         hass=hass,
@@ -188,6 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
             EntityUpdatePriority.VERY_FREQUENT,
             entry.entry_id,
             entity_enabled_by_unique_id,
+            god_mode_enabled,
         ),
         update_interval=options.get(
             ConfScanInterval.VERY_FREQUENT, ScanIntervalDefault.VERY_FREQUENT
@@ -203,6 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
             EntityUpdatePriority.FREQUENT,
             entry.entry_id,
             entity_enabled_by_unique_id,
+            god_mode_enabled,
         ),
         update_interval=options.get(
             ConfScanInterval.FREQUENT, ScanIntervalDefault.FREQUENT
@@ -218,6 +222,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
             EntityUpdatePriority.INFREQUENT,
             entry.entry_id,
             entity_enabled_by_unique_id,
+            god_mode_enabled,
         ),
         update_interval=options.get(
             ConfScanInterval.INFREQUENT, ScanIntervalDefault.INFREQUENT
@@ -233,6 +238,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
             EntityUpdatePriority.STATIC,
             entry.entry_id,
             entity_enabled_by_unique_id,
+            god_mode_enabled,
         ),
         update_interval=options.get(
             ConfScanInterval.STATIC, ScanIntervalDefault.STATIC

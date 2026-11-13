@@ -294,6 +294,7 @@ class RctPowerBinarySensorEntity(BinarySensorEntity, RctPowerEntity):
 class RctPowerEntityDescription(EntityDescription):
     icon: str | None = ICON
     object_names: list[str] | None = None
+    requires_god_mode: bool = False
     # to allow for stable entity identities even if the object ids change
     unique_id: str | None = None
     update_priority: EntityUpdatePriority = EntityUpdatePriority.FREQUENT
