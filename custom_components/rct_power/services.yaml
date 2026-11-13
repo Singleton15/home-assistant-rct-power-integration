@@ -1,0 +1,11 @@
+restart_communication:
+  name: Restart inverter communication
+  description: Stop polling, restart the inverter communication module, then resume polling after 30 seconds.
+  fields:
+    config_entry_id:
+      name: Inverter
+      description: RCT Power inverter config entry to restart.
+      required: true
+      selector:
+        config_entry:
+          integration: rct_power

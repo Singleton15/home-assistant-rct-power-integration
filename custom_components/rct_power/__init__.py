@@ -7,20 +7,31 @@ https://github.com/weltenwort/home-assistant-rct-power-integration
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
-from homeassistant.config_entries import ConfigEntry
+import aiohttp
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.hass_dict import HassEntryKey
 
 from .const import (
+    CONF_CONFIG_ENTRY_ID,
     CONF_HOSTNAME,
+    CONF_RESTART_SERIAL_NUMBER,
     DOMAIN,
+    LOGGER,
     PLATFORMS,
+    RESTART_WAIT_SECONDS,
+    SERVICE_RESTART_COMMUNICATION,
     ConfScanInterval,
     EntityUpdatePriority,
     ScanIntervalDefault,
@@ -72,6 +83,83 @@ def _entity_unique_id(
         for object_info in resolve_object_infos(entity_description)
     ]
     return "-".join([entry_id, *object_ids])
+
+
+async def _async_send_restart_request(
+    hass: HomeAssistant, entry: RctConfigEntry, serial_number: str
+) -> None:
+    session = async_get_clientsession(hass)
+    async with session.get(
+        f"http://{entry.data[CONF_HOSTNAME]}/EN/restart.html",
+        headers={
+            "Authorization": aiohttp.encode_basic_auth("admin", serial_number)
+        },
+        timeout=aiohttp.ClientTimeout(total=10),
+    ) as response:
+        response.raise_for_status()
+        body = await response.read()
+        if b"rebooting" not in body.lower():
+            raise HomeAssistantError(
+                "The inverter response did not confirm that it is rebooting"
+            )
+        LOGGER.info(
+            "RCT Power inverter %s confirmed that it is rebooting",
+            entry.unique_id or entry.entry_id,
+        )
+
+
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+    """Register integration-wide services."""
+
+    async def async_restart_communication(call: ServiceCall) -> None:
+        entry_id = call.data[CONF_CONFIG_ENTRY_ID]
+        entry = cast(
+            RctConfigEntry | None, hass.config_entries.async_get_entry(entry_id)
+        )
+        if entry is None or entry.domain != DOMAIN:
+            raise HomeAssistantError(f"Unknown RCT Power config entry: {entry_id}")
+        options = cast(RctConfEntryOptions, entry.options)
+        serial_number = options.get(CONF_RESTART_SERIAL_NUMBER) or entry.unique_id
+        if not serial_number:
+            raise HomeAssistantError(
+                "Configure the inverter serial number in the RCT Power options "
+                "before restarting communication"
+            )
+
+        restart_locks: dict[str, asyncio.Lock] = hass.data.setdefault(
+            f"{DOMAIN}_restart_locks", {}
+        )
+        lock = restart_locks.setdefault(entry_id, asyncio.Lock())
+        async with lock:
+            if entry.state is not ConfigEntryState.LOADED:
+                raise HomeAssistantError(
+                    f"RCT Power config entry {entry_id} is not loaded"
+                )
+            if not await hass.config_entries.async_unload(entry_id):
+                raise HomeAssistantError(
+                    f"Failed to stop communication for RCT Power config entry {entry_id}"
+                )
+
+            try:
+                await _async_send_restart_request(hass, entry, serial_number)
+            except (aiohttp.ClientError, TimeoutError) as err:
+                raise HomeAssistantError(
+                    f"Failed to restart communication for RCT Power config entry {entry_id}"
+                ) from err
+            finally:
+                await asyncio.sleep(RESTART_WAIT_SECONDS)
+                if not await hass.config_entries.async_setup(entry_id):
+                    raise HomeAssistantError(
+                        f"Failed to resume communication for RCT Power config entry {entry_id}"
+                    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESTART_COMMUNICATION,
+        async_restart_communication,
+        schema=vol.Schema({vol.Required(CONF_CONFIG_ENTRY_ID): cv.string}),
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:

@@ -2,24 +2,32 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock, Mock
+
+import aiohttp
 import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.rct_power import (
     RctData,
+    _async_send_restart_request,
     async_setup_entry,
     object_ids_for_update_priority,
 )
 from custom_components.rct_power.const import (
+    CONF_CONFIG_ENTRY_ID,
     CONF_ENTITY_PREFIX,
     CONF_HOSTNAME,
+    CONF_RESTART_SERIAL_NUMBER,
     DEFAULT_ENTITY_PREFIX,
     DEFAULT_PORT,
     DOMAIN,
+    RESTART_WAIT_SECONDS,
+    SERVICE_RESTART_COMMUNICATION,
 )
 from custom_components.rct_power.lib.entities import all_entity_descriptions
 from custom_components.rct_power.lib.entity import resolve_object_infos
@@ -155,3 +163,114 @@ async def test_setup_entry_exception(hass: HomeAssistant) -> None:
     # an error.
     with pytest.raises(ConfigEntryNotReady):
         assert await async_setup_entry(hass, config_entry)
+
+
+@pytest.mark.usefixtures("bypass_get_data")
+async def test_restart_service_stops_restarts_waits_and_resumes(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Restart communication using the configured serial and restore the entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOSTNAME: "192.0.2.10",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_ENTITY_PREFIX: DEFAULT_ENTITY_PREFIX,
+        },
+        options={CONF_RESTART_SERIAL_NUMBER: "configured-serial"},
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    events: list[tuple[str, object]] = []
+
+    async def unload(entry_id: str) -> bool:
+        events.append(("unload", entry_id))
+        return True
+
+    async def send_restart_request(
+        hass: HomeAssistant, entry: MockConfigEntry, serial_number: str
+    ) -> None:
+        events.append(("restart", serial_number))
+
+    async def wait(seconds: int) -> None:
+        events.append(("wait", seconds))
+
+    async def setup(entry_id: str) -> bool:
+        events.append(("setup", entry_id))
+        return True
+
+    monkeypatch.setattr(hass.config_entries, "async_unload", unload)
+    monkeypatch.setattr(hass.config_entries, "async_setup", setup)
+    monkeypatch.setattr(
+        "custom_components.rct_power._async_send_restart_request",
+        send_restart_request,
+    )
+    monkeypatch.setattr("custom_components.rct_power.asyncio.sleep", wait)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_RESTART_COMMUNICATION,
+        {CONF_CONFIG_ENTRY_ID: config_entry.entry_id},
+        blocking=True,
+    )
+
+    assert events == [
+        ("unload", config_entry.entry_id),
+        ("restart", "configured-serial"),
+        ("wait", RESTART_WAIT_SECONDS),
+        ("setup", config_entry.entry_id),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("body", "confirmed"),
+    [
+        (b"<h2>Rebooting...</h2>", True),
+        (b"<h2>Restart failed</h2>", False),
+    ],
+)
+async def test_restart_request_checks_inverter_confirmation(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    body: bytes,
+    confirmed: bool,
+) -> None:
+    """Use the configured inverter host and serial for the restart request."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOSTNAME: "192.0.2.10"},
+        entry_id="test",
+    )
+    response = Mock()
+    response.raise_for_status = Mock()
+    response.read = AsyncMock(return_value=body)
+    response_context = MagicMock()
+    response_context.__aenter__ = AsyncMock(return_value=response)
+    response_context.__aexit__ = AsyncMock(return_value=None)
+    session = Mock()
+    session.get = Mock(return_value=response_context)
+    monkeypatch.setattr(
+        "custom_components.rct_power.async_get_clientsession",
+        Mock(return_value=session),
+    )
+
+    if confirmed:
+        await _async_send_restart_request(hass, entry, "configured-serial")
+    else:
+        with pytest.raises(
+            HomeAssistantError,
+            match="did not confirm that it is rebooting",
+        ):
+            await _async_send_restart_request(hass, entry, "configured-serial")
+
+    session.get.assert_called_once()
+    response.read.assert_awaited_once()
+    url = session.get.call_args.args[0]
+    request_options = session.get.call_args.kwargs
+    assert url == "http://192.0.2.10/EN/restart.html"
+    assert request_options["headers"]["Authorization"] == aiohttp.encode_basic_auth(
+        "admin", "configured-serial"
+    )
+    assert request_options["timeout"] == aiohttp.ClientTimeout(total=10)

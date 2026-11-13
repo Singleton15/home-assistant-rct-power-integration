@@ -16,6 +16,7 @@ from .const import (
     CONF_ALLOW_WRITES,
     CONF_ENTITY_PREFIX,
     CONF_HOSTNAME,
+    CONF_RESTART_SERIAL_NUMBER,
     DEFAULT_ENTITY_PREFIX,
     DEFAULT_PORT,
     DOMAIN,
@@ -93,7 +94,13 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, self.config_entry.options
+                OPTIONS_SCHEMA,
+                {
+                    **self.config_entry.options,
+                    CONF_RESTART_SERIAL_NUMBER: self.config_entry.options.get(
+                        CONF_RESTART_SERIAL_NUMBER, self.config_entry.unique_id
+                    ),
+                },
             ),
         )
 
@@ -126,5 +133,6 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALLOW_WRITES, default=False): bool,
         # every inverter keeps its own battery settings
         vol.Optional(CONF_ALLOW_BATTERY_WRITES, default=False): bool,
+        vol.Optional(CONF_RESTART_SERIAL_NUMBER): vol.All(str, vol.Length(min=1)),
     }
 )

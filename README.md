@@ -51,6 +51,23 @@ After installation the integration allows for the following configuration parame
 - `Frequent polling interval`: The polling interval in seconds for entities updated frequently, defaults to `30`.
 - `Infrequent polling interval`: The polling interval in seconds for entities updated infrequently, defaults to `180`.
 - `Static polling interval`: The polling interval in seconds for entities updated seldomly, defaults to `3600`.
+- `Inverter serial number for communication restart`: Serial number used for HTTP Basic authentication when restarting the communication module. It defaults to the detected inverter serial number.
+
+The `rct_power.restart_communication` action can be called from an automation or
+script to restart an inverter's communication module. This is the same reboot
+operation as pressing **Reboot** in the inverter's web interface, and can be
+useful when the communication module occasionally stops responding. The action
+unloads the integration entry, sends an HTTP GET to
+`http://<inverter-host>/EN/restart.html` using the fixed username `admin` and
+configured serial number, waits 30 seconds, then reloads the integration entry.
+It succeeds only if the response contains the inverter's `Rebooting`
+confirmation. It does not detect stalled communication or run automatically.
+
+```yaml
+action: rct_power.restart_communication
+data:
+  config_entry_id: 01JSC8MAVZW4S14ZJK3NKR5CVF
+```
 
 Only lower the very frequent polling interval (for example, to `5` seconds) after
 disabling entities you do not need. See [Reducing communication
