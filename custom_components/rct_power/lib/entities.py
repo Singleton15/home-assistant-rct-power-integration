@@ -953,6 +953,15 @@ inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
     ),
     RctPowerSensorEntityDescription(
         get_device_info=get_inverter_device_info,
+        key="power_mng.soc_charge_power",
+        name="Maintenance charge power",
+        requires_god_mode=True,
+        update_priority=EntityUpdatePriority.INFREQUENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
         key="phase_power_offset[1]",
         name="Power Sensor Phase 2 Offset Correction",
         requires_god_mode=True,

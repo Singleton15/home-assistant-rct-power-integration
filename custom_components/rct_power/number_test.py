@@ -35,6 +35,9 @@ ENTITY_ID = "number.master_external_power_reduction"
 PHASE_OFFSET_OBJECT_IDS = [
     REGISTRY.get_by_name(f"phase_power_offset[{phase}]").object_id for phase in range(3)
 ]
+MAINTENANCE_CHARGE_POWER_ID = REGISTRY.get_by_name(
+    "power_mng.soc_charge_power"
+).object_id
 
 
 def response(value: float, object_id: int = REDUCTION_ID) -> ValidApiResponse:
@@ -59,6 +62,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(1.0)
         elif object_id in PHASE_OFFSET_OBJECT_IDS:
             data[object_id] = response(10.0, object_id)
+        elif object_id == MAINTENANCE_CHARGE_POWER_ID:
+            data[object_id] = response(1000.0, object_id)
     return data
 
 
@@ -115,6 +120,37 @@ async def test_phase_offset_numbers_require_god_mode(hass: HomeAssistant) -> Non
             )
             is None
         )
+    assert hass.states.get("number.master_maintenance_charge_power") is None
+
+
+async def test_write_maintenance_charge_power(hass: HomeAssistant) -> None:
+    """Expose the maintenance charge power writer only in God mode."""
+    await setup(hass, create_entry(hass, {CONF_GOD_MODE: True}))
+    entity_id = "number.master_maintenance_charge_power"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1000.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["min"] == 100
+    assert state.attributes["max"] == 4000
+    assert state.attributes["step"] == 100
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=lambda object_id, value: response(value, object_id)),
+    ) as write:
+        await set_value(hass, 1500, entity_id)
+        write.assert_awaited_once_with(MAINTENANCE_CHARGE_POWER_ID, 1500)
+
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 4100, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 1550, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 0, entity_id)
+
+    assert hass.states.get(entity_id).state == "1500.0"  # type: ignore
 
 
 @pytest.mark.parametrize(

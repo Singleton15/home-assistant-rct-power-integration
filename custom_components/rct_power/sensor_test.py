@@ -53,6 +53,7 @@ RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "phase_power_offset[0]": struct.pack(">f", 0.5),
     "phase_power_offset[1]": struct.pack(">f", -1.5),
     "phase_power_offset[2]": struct.pack(">f", 2.5),
+    "power_mng.soc_charge_power": struct.pack(">f", 1500.5),
     "csc[0].gain": struct.pack(">f", 0.999758),
     "csc[1].gain": struct.pack(">f", 1.000246),
     "csc[2].gain": struct.pack(">f", 0.998765),
@@ -218,6 +219,18 @@ async def test_battery_module_sensors(
         state = get_state(hass, f"power_sensor_phase_{phase}_offset_correction")
         assert float(state.state) == pytest.approx(expected_value)
 
+    charge_power_id = REGISTRY.get_by_name("power_mng.soc_charge_power").object_id
+    assert charge_power_id == 0x1D2994EA
+    state = get_state(hass, "maintenance_charge_power")
+    assert float(state.state) == pytest.approx(1500.5)
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert (
+        charge_power_id
+        in config_entry.runtime_data.update_coordinators[
+            EntityUpdatePriority.INFREQUENT
+        ].object_ids
+    )
+
     for phase, object_id, expected_value in (
         (1, 0x6A9A9FED, 0.999758),
         (2, 0x93FAD04A, 1.000246),
@@ -279,6 +292,7 @@ async def test_power_sensor_correction_sensors_require_god_mode(
     correction_names = [
         *(f"phase_power_offset[{phase}]" for phase in range(3)),
         *(f"csc[{phase}].gain" for phase in range(3)),
+        "power_mng.soc_charge_power",
     ]
     correction_object_ids = {
         REGISTRY.get_by_name(name).object_id for name in correction_names
@@ -294,6 +308,7 @@ async def test_power_sensor_correction_sensors_require_god_mode(
         for phase in range(1, 4)
         for correction_type in ("offset", "gain")
     )
+    assert hass.states.get("sensor.master_maintenance_charge_power") is None
 
 
 async def test_device_without_serial_numbers(hass: HomeAssistant) -> None:

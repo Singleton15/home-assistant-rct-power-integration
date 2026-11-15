@@ -60,6 +60,19 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         )
         for phase in range(3)
     ],
+    RctPowerNumberEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="power_mng.soc_charge_power",
+        name="Maintenance charge power",
+        write_option=CONF_GOD_MODE,
+        update_priority=EntityUpdatePriority.INFREQUENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_min_value=100,
+        native_max_value=4000,
+        native_step=100,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
     # the inverter takes a fraction of the solar plant peak power
     RctPowerNumberEntityDescription(
         get_device_info=get_inverter_device_info,

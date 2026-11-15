@@ -60,6 +60,20 @@ _CURRENT_SENSOR_GAIN_OBJECTS = [
     ),
 ]
 
+_MAINTENANCE_CHARGE_POWER_OBJECT = ObjectInfo(
+    group=ObjectGroup.OTHERS,
+    object_id=0x1D2994EA,
+    index=0,
+    name="power_mng.soc_charge_power",
+    request_data_type=DataType.FLOAT,
+    response_data_type=DataType.FLOAT,
+)
+
 REGISTRY = Registry(
-    [*RCT_REGISTRY.all(), *_PHASE_POWER_OFFSET_OBJECTS, *_CURRENT_SENSOR_GAIN_OBJECTS]
+    [
+        *RCT_REGISTRY.all(),
+        *_PHASE_POWER_OFFSET_OBJECTS,
+        *_CURRENT_SENSOR_GAIN_OBJECTS,
+        _MAINTENANCE_CHARGE_POWER_OBJECT,
+    ]
 )
