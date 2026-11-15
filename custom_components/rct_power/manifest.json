@@ -4,9 +4,9 @@
   "codeowners": ["@weltenwort"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/weltenwort/home-assistant-rct-power-integration",
+  "documentation": "https://github.com/Singleton15/home-assistant-rct-power-integration",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/weltenwort/home-assistant-rct-power-integration/issues",
+  "issue_tracker": "https://github.com/Singleton15/home-assistant-rct-power-integration/issues",
   "requirements": ["rctclient==0.0.6"],
   "version": "0.14.2"
 }

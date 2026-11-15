@@ -74,7 +74,7 @@ class RctPowerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=self.get_title(user_input),
                     data=user_input,
                     description_placeholders={
-                        "repo_url": "https://github.com/weltenwort/home-assistant-rct-power-integration"
+                        "repo_url": "https://github.com/Singleton15/home-assistant-rct-power-integration"
                     },
                 )
             else:
