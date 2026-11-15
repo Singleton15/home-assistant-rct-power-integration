@@ -168,8 +168,8 @@ depending on your preference.
 | Battery Used Energy                           | Wh   | the cumulative energy consumed from the battery                               | frequent          |
 | Battery Status                                |      | the current battery status                                                    | frequent          |
 | Battery Maximum Charging Current              | A    | the charging current currently allowed by the BMS                             | frequent          |
-| Battery Converter Maximum Charging Current    | A    | the charging current currently allowed by the inverter's battery converter    | frequent          |
-| Battery Converter Maximum Discharging Current | A    | the discharging current currently allowed by the battery converter            | frequent          |
+| Battery Converter Maximum Charging Current    | A    | converter charge-current limit; God mode only (default: 25 A)                  | infrequent        |
+| Battery Converter Maximum Discharging Current | A    | converter discharge-current limit; God mode only (default: 25 A)               | infrequent        |
 | Battery State of Charge Strategy              |      | the SOC target selection (e.g. 4 = internal, 2 = external)                    | infrequent        |
 | Battery Efficiency                            | %    | the ratio of used to stored energy                                            | infrequent        |
 | Next Battery Calibration Date                 |      | the date and time of the next planned battery calibration                     | infrequent        |
@@ -341,6 +341,13 @@ the mode, enable "Allow changing inverter settings". This adds
 `select.<prefix>_rs485_modbus_mode`.
 
 ### Controlling the battery
+
+With God mode enabled, the battery converter charge and discharge current
+limit sensors report `acc_conv.i_charge_max` and `acc_conv.i_discharge_max`.
+Their corresponding `number.<battery>_battery_converter_maximum_charging_current`
+and `number.<battery>_battery_converter_maximum_discharging_current` entities
+set the limits from 1 to 25 A in 1 A steps (default: 25 A). These sensors are
+polled infrequently.
 
 With God mode enabled, `sensor.<prefix>_maintenance_charge_power` reports
 `power_mng.soc_charge_power`, and

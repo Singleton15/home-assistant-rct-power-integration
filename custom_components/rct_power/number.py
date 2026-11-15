@@ -12,7 +12,13 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    Platform,
+    UnitOfElectricCurrent,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -73,6 +79,28 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
+    *[
+        RctPowerNumberEntityDescription(
+            get_device_info=get_battery_device_info,
+            key=object_name,
+            name=entity_name,
+            write_option=CONF_GOD_MODE,
+            update_priority=EntityUpdatePriority.INFREQUENT,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_min_value=1,
+            native_max_value=25,
+            native_step=1,
+            mode=NumberMode.BOX,
+            entity_category=EntityCategory.CONFIG,
+        )
+        for object_name, entity_name in (
+            ("acc_conv.i_charge_max", "Battery Converter Maximum Charging Current"),
+            (
+                "acc_conv.i_discharge_max",
+                "Battery Converter Maximum Discharging Current",
+            ),
+        )
+    ],
     # the inverter takes a fraction of the solar plant peak power
     RctPowerNumberEntityDescription(
         get_device_info=get_inverter_device_info,

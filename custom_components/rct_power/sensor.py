@@ -41,6 +41,8 @@ async def async_setup_entry(
             entity_description=entity_description,
         )
         for entity_description in battery_sensor_entity_descriptions
+        if entry.options.get(CONF_GOD_MODE, False)
+        or not entity_description.requires_god_mode
     ]
 
     battery_cell_sensor_entities = [

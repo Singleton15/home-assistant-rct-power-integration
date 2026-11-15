@@ -38,6 +38,10 @@ PHASE_OFFSET_OBJECT_IDS = [
 MAINTENANCE_CHARGE_POWER_ID = REGISTRY.get_by_name(
     "power_mng.soc_charge_power"
 ).object_id
+BATTERY_CONVERTER_CURRENT_IDS = {
+    "acc_conv.i_charge_max": 0xB0FA4D23,
+    "acc_conv.i_discharge_max": 0xC642B9D6,
+}
 
 
 def response(value: float, object_id: int = REDUCTION_ID) -> ValidApiResponse:
@@ -64,6 +68,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(10.0, object_id)
         elif object_id == MAINTENANCE_CHARGE_POWER_ID:
             data[object_id] = response(1000.0, object_id)
+        elif object_id in BATTERY_CONVERTER_CURRENT_IDS.values():
+            data[object_id] = response(25.0, object_id)
     return data
 
 
@@ -121,6 +127,18 @@ async def test_phase_offset_numbers_require_god_mode(hass: HomeAssistant) -> Non
             is None
         )
     assert hass.states.get("number.master_maintenance_charge_power") is None
+    assert (
+        hass.states.get(
+            "number.battery_at_master_master_battery_converter_maximum_charging_current"
+        )
+        is None
+    )
+    assert (
+        hass.states.get(
+            "number.battery_at_master_master_battery_converter_maximum_discharging_current"
+        )
+        is None
+    )
 
 
 async def test_write_maintenance_charge_power(hass: HomeAssistant) -> None:
@@ -151,6 +169,54 @@ async def test_write_maintenance_charge_power(hass: HomeAssistant) -> None:
             await set_value(hass, 0, entity_id)
 
     assert hass.states.get(entity_id).state == "1500.0"  # type: ignore
+
+
+@pytest.mark.parametrize(
+    ("object_name", "number_entity_suffix"),
+    [
+        (
+            "acc_conv.i_charge_max",
+            "battery_converter_maximum_charging_current",
+        ),
+        (
+            "acc_conv.i_discharge_max",
+            "battery_converter_maximum_discharging_current",
+        ),
+    ],
+)
+async def test_write_battery_converter_current_limit(
+    hass: HomeAssistant,
+    object_name: str,
+    number_entity_suffix: str,
+) -> None:
+    """Expose converter current limit writers only in God mode."""
+    await setup(hass, create_entry(hass, {CONF_GOD_MODE: True}))
+    entity_id = f"number.battery_at_master_master_{number_entity_suffix}"
+    object_id = BATTERY_CONVERTER_CURRENT_IDS[object_name]
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "25.0"
+    assert state.attributes["unit_of_measurement"] == "A"
+    assert state.attributes["min"] == 1
+    assert state.attributes["max"] == 25
+    assert state.attributes["step"] == 1
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=lambda obj_id, value: response(value, obj_id)),
+    ) as write:
+        await set_value(hass, 20, entity_id)
+        write.assert_awaited_once_with(object_id, 20)
+
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 26, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 0, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 20.5, entity_id)
+
+    assert hass.states.get(entity_id).state == "20.0"  # type: ignore
 
 
 @pytest.mark.parametrize(

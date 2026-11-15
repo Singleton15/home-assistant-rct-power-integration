@@ -54,6 +54,8 @@ RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "phase_power_offset[1]": struct.pack(">f", -1.5),
     "phase_power_offset[2]": struct.pack(">f", 2.5),
     "power_mng.soc_charge_power": struct.pack(">f", 1500.5),
+    "acc_conv.i_charge_max": struct.pack(">f", 25.0),
+    "acc_conv.i_discharge_max": struct.pack(">f", 25.0),
     "csc[0].gain": struct.pack(">f", 0.999758),
     "csc[1].gain": struct.pack(">f", 1.000246),
     "csc[2].gain": struct.pack(">f", 0.998765),
@@ -231,6 +233,29 @@ async def test_battery_module_sensors(
         ].object_ids
     )
 
+    for object_name, object_id, entity_suffix in (
+        (
+            "acc_conv.i_charge_max",
+            0xB0FA4D23,
+            "battery_converter_maximum_charging_current",
+        ),
+        (
+            "acc_conv.i_discharge_max",
+            0xC642B9D6,
+            "battery_converter_maximum_discharging_current",
+        ),
+    ):
+        assert REGISTRY.get_by_name(object_name).object_id == object_id
+        state = get_state(hass, entity_suffix)
+        assert float(state.state) == pytest.approx(25.0)
+        assert state.attributes["unit_of_measurement"] == "A"
+        assert (
+            object_id
+            in config_entry.runtime_data.update_coordinators[
+                EntityUpdatePriority.INFREQUENT
+            ].object_ids
+        )
+
     for phase, object_id, expected_value in (
         (1, 0x6A9A9FED, 0.999758),
         (2, 0x93FAD04A, 1.000246),
@@ -293,6 +318,8 @@ async def test_power_sensor_correction_sensors_require_god_mode(
         *(f"phase_power_offset[{phase}]" for phase in range(3)),
         *(f"csc[{phase}].gain" for phase in range(3)),
         "power_mng.soc_charge_power",
+        "acc_conv.i_charge_max",
+        "acc_conv.i_discharge_max",
     ]
     correction_object_ids = {
         REGISTRY.get_by_name(name).object_id for name in correction_names
@@ -309,6 +336,18 @@ async def test_power_sensor_correction_sensors_require_god_mode(
         for correction_type in ("offset", "gain")
     )
     assert hass.states.get("sensor.master_maintenance_charge_power") is None
+    assert (
+        hass.states.get(
+            "sensor.battery_at_master_master_battery_converter_maximum_charging_current"
+        )
+        is None
+    )
+    assert (
+        hass.states.get(
+            "sensor.battery_at_master_master_battery_converter_maximum_discharging_current"
+        )
+        is None
+    )
 
 
 async def test_device_without_serial_numbers(hass: HomeAssistant) -> None:

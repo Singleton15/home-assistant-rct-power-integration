@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTemperature,
@@ -303,15 +304,19 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         get_device_info=get_battery_device_info,
         key="acc_conv.i_charge_max",
         name="Battery Converter Maximum Charging Current",
-        update_priority=EntityUpdatePriority.FREQUENT,
+        requires_god_mode=True,
+        update_priority=EntityUpdatePriority.INFREQUENT,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RctPowerSensorEntityDescription(
         get_device_info=get_battery_device_info,
         key="acc_conv.i_discharge_max",
         name="Battery Converter Maximum Discharging Current",
-        update_priority=EntityUpdatePriority.FREQUENT,
+        requires_god_mode=True,
+        update_priority=EntityUpdatePriority.INFREQUENT,
         state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RctPowerSensorEntityDescription(
         get_device_info=get_battery_device_info,
