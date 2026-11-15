@@ -54,6 +54,7 @@ RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "phase_power_offset[1]": struct.pack(">f", -1.5),
     "phase_power_offset[2]": struct.pack(">f", 2.5),
     "power_mng.soc_charge_power": struct.pack(">f", 1500.5),
+    "p_rec_lim[1]": struct.pack(">f", 3000.0),
     "acc_conv.i_charge_max": struct.pack(">f", 25.0),
     "acc_conv.i_discharge_max": struct.pack(">f", 25.0),
     "csc[0].gain": struct.pack(">f", 0.999758),
@@ -233,6 +234,18 @@ async def test_battery_module_sensors(
         ].object_ids
     )
 
+    max_battery_to_grid_power_id = REGISTRY.get_by_name("p_rec_lim[1]").object_id
+    assert max_battery_to_grid_power_id == 0x54829753
+    state = get_state(hass, "max_battery_to_grid_power")
+    assert float(state.state) == pytest.approx(3000.0)
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert (
+        max_battery_to_grid_power_id
+        in config_entry.runtime_data.update_coordinators[
+            EntityUpdatePriority.INFREQUENT
+        ].object_ids
+    )
+
     for object_name, object_id, entity_suffix in (
         (
             "acc_conv.i_charge_max",
@@ -348,6 +361,9 @@ async def test_power_sensor_correction_sensors_require_god_mode(
         )
         is None
     )
+    max_battery_to_grid_power_id = REGISTRY.get_by_name("p_rec_lim[1]").object_id
+    assert max_battery_to_grid_power_id in requested_object_ids
+    assert hass.states.get("sensor.master_max_battery_to_grid_power") is not None
 
 
 async def test_device_without_serial_numbers(hass: HomeAssistant) -> None:

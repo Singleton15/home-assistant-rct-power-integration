@@ -69,11 +69,21 @@ _MAINTENANCE_CHARGE_POWER_OBJECT = ObjectInfo(
     response_data_type=DataType.FLOAT,
 )
 
+_MAX_BATTERY_TO_GRID_POWER_OBJECT = ObjectInfo(
+    group=ObjectGroup.OTHERS,
+    object_id=0x54829753,
+    index=1,
+    name="p_rec_lim[1]",
+    request_data_type=DataType.FLOAT,
+    response_data_type=DataType.FLOAT,
+)
+
 REGISTRY = Registry(
     [
         *RCT_REGISTRY.all(),
         *_PHASE_POWER_OFFSET_OBJECTS,
         *_CURRENT_SENSOR_GAIN_OBJECTS,
         _MAINTENANCE_CHARGE_POWER_OBJECT,
+        _MAX_BATTERY_TO_GRID_POWER_OBJECT,
     ]
 )

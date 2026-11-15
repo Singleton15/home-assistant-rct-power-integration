@@ -38,6 +38,7 @@ PHASE_OFFSET_OBJECT_IDS = [
 MAINTENANCE_CHARGE_POWER_ID = REGISTRY.get_by_name(
     "power_mng.soc_charge_power"
 ).object_id
+MAX_BATTERY_TO_GRID_POWER_ID = REGISTRY.get_by_name("p_rec_lim[1]").object_id
 BATTERY_CONVERTER_CURRENT_IDS = {
     "acc_conv.i_charge_max": 0xB0FA4D23,
     "acc_conv.i_discharge_max": 0xC642B9D6,
@@ -68,6 +69,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(10.0, object_id)
         elif object_id == MAINTENANCE_CHARGE_POWER_ID:
             data[object_id] = response(1000.0, object_id)
+        elif object_id == MAX_BATTERY_TO_GRID_POWER_ID:
+            data[object_id] = response(3000.0, object_id)
         elif object_id in BATTERY_CONVERTER_CURRENT_IDS.values():
             data[object_id] = response(25.0, object_id)
     return data
@@ -291,6 +294,39 @@ async def test_write_external_power_reduction(hass: HomeAssistant) -> None:
 
     with pytest.raises(ServiceValidationError):
         await set_value(hass, 120)
+
+
+async def test_write_max_battery_to_grid_power(hass: HomeAssistant) -> None:
+    """Expose the battery-to-grid limit writer with inverter write permission."""
+    await setup(hass, create_entry(hass, {CONF_ALLOW_WRITES: True}))
+    entity_id = "number.master_max_battery_to_grid_power"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "3000.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["min"] == -6000
+    assert state.attributes["max"] == 6000
+    assert state.attributes["step"] == 1
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=lambda object_id, value: response(value, object_id)),
+    ) as write:
+        await set_value(hass, -6000, entity_id)
+        write.assert_awaited_once_with(MAX_BATTERY_TO_GRID_POWER_ID, -6000)
+        await set_value(hass, 6000, entity_id)
+        assert write.await_count == 2
+        write.assert_awaited_with(MAX_BATTERY_TO_GRID_POWER_ID, 6000)
+
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, -6001, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 6001, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 1.5, entity_id)
+
+    assert hass.states.get(entity_id).state == "6000.0"  # type: ignore
 
 
 async def test_write_not_accepted(hass: HomeAssistant) -> None:

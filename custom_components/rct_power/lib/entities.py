@@ -767,6 +767,13 @@ inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
     ),
     RctPowerSensorEntityDescription(
         get_device_info=get_inverter_device_info,
+        key="p_rec_lim[1]",
+        name="Max. Battery to Grid Power",
+        update_priority=EntityUpdatePriority.INFREQUENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
         key="buf_v_control.power_reduction",
         name="External Power Reduction",
         update_priority=EntityUpdatePriority.INFREQUENT,

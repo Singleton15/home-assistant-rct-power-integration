@@ -79,6 +79,18 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
     ),
+    RctPowerNumberEntityDescription(
+        get_device_info=get_inverter_device_info,
+        key="p_rec_lim[1]",
+        name="Max. Battery to Grid Power",
+        update_priority=EntityUpdatePriority.INFREQUENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_min_value=-6000,
+        native_max_value=6000,
+        native_step=1,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
     *[
         RctPowerNumberEntityDescription(
             get_device_info=get_battery_device_info,

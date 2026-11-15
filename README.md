@@ -138,6 +138,7 @@ depending on your preference.
 | Grid Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy fed into the grid                                               | infrequent        |
 | Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation      | infrequent        |
 | Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid                    | static            |
+| Max. Battery to Grid Power                   | W    | the configured maximum battery power to the grid                                     | infrequent        |
 
 ### Battery
 
@@ -334,6 +335,11 @@ output. It is still shown as the "Grid Maximum Feed Power" sensor.
 The value is only written when it changes and the value read back from the
 inverter is shown in the entity and the "External Power Reduction" sensor.
 Avoid changing it every few seconds from an automation.
+
+The `sensor.<prefix>_max_battery_to_grid_power` entity reports
+`p_rec_lim[1]`. Enable "Allow changing inverter settings" to add the matching
+`number.<prefix>_max_battery_to_grid_power` entity, which sets the limit from
+-6,000 to 6,000 W in 1 W steps.
 
 The `sensor.<prefix>_rs485_modbus_mode` entity reports whether the inverter's
 RS485 interface is configured as `Modbus master` or `Modbus slave`. To change
