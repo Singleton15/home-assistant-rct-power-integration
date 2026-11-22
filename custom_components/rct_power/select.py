@@ -15,7 +15,7 @@ from rctclient.registry import REGISTRY
 
 from . import RctConfigEntry
 from .const import CONF_ALLOW_BATTERY_WRITES, CONF_ALLOW_WRITES, EntityUpdatePriority
-from .lib.device_info_helpers import get_battery_device_info, get_inverter_device_info
+from .lib.device_info_helpers import get_inverter_device_info
 from .lib.entity import RctPowerEntity, RctPowerEntityDescription
 from .models import RctConfEntryOptions
 
@@ -34,7 +34,7 @@ SOC_STRATEGIES = ["Constant", "External", "Internal", "Schedule", "SOC target = 
 
 select_entity_descriptions: list[RctPowerSelectEntityDescription] = [
     RctPowerSelectEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_strategy",
         unique_id="soc_strategy",
         name="Battery State of Charge Strategy",

@@ -42,12 +42,12 @@ MIN_SOC_ID = REGISTRY.get_by_name("power_mng.soc_min").object_id
 MAX_SOC_ID = REGISTRY.get_by_name("power_mng.soc_max").object_id
 POWER_ID = REGISTRY.get_by_name("power_mng.battery_power_extern").object_id
 MODBUS_MODE_ID = REGISTRY.get_by_name("modbus.mode").object_id
-SELECT_ENTITY_ID = "select.battery_at_master_master_battery_state_of_charge_strategy"
+SELECT_ENTITY_ID = "select.master_battery_state_of_charge_strategy"
 MODBUS_MODE_SELECT_ENTITY_ID = "select.master_rs485_modbus_mode"
 MODBUS_MODE_SENSOR_ENTITY_ID = "sensor.master_rs485_modbus_mode"
-NUMBER_ENTITY_ID = "number.battery_at_master_master_battery_external_power"
-MIN_SOC_ENTITY_ID = "number.battery_at_master_master_battery_minimum_state_of_charge"
-MAX_SOC_ENTITY_ID = "number.battery_at_master_master_battery_maximum_state_of_charge"
+NUMBER_ENTITY_ID = "number.master_battery_external_power"
+MIN_SOC_ENTITY_ID = "number.master_battery_minimum_state_of_charge"
+MAX_SOC_ENTITY_ID = "number.master_battery_maximum_state_of_charge"
 
 
 def response(object_id: int, value: float) -> ValidApiResponse:
@@ -224,9 +224,7 @@ async def test_write_constant_soc_target(hass: HomeAssistant) -> None:
     """The inverter takes a fraction, Home Assistant shows percent."""
     await setup(hass, {CONF_ALLOW_BATTERY_WRITES: True})
 
-    entity_id = (
-        "number.battery_at_master_master_battery_state_of_charge_constant_target"
-    )
+    entity_id = "number.master_battery_state_of_charge_constant_target"
     state = hass.states.get(entity_id)
     assert state is not None and state.state == "97.0"
     assert state.attributes["min"] == 5

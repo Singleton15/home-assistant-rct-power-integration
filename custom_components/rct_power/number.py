@@ -33,7 +33,6 @@ from .const import (
     EntityUpdatePriority,
 )
 from .lib.device_info_helpers import (
-    get_battery_device_info,
     get_inverter_device_info,
 )
 from .lib.entity import RctPowerEntity, RctPowerEntityDescription
@@ -105,7 +104,7 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
     ),
     *[
         RctPowerNumberEntityDescription(
-            get_device_info=get_battery_device_info,
+            get_device_info=get_inverter_device_info,
             key=object_name,
             name=entity_name,
             write_option=CONF_GOD_MODE,
@@ -143,7 +142,7 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
     ),
     # only used while the SOC strategy is "Constant"
     RctPowerNumberEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_target_set",
         unique_id="soc_target_set",
         name="Battery State of Charge Constant Target",
@@ -159,7 +158,7 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
     ),
     RctPowerNumberEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_min",
         unique_id="soc_min",
         name="Battery Minimum State of Charge",
@@ -175,7 +174,7 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
     ),
     RctPowerNumberEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_max",
         unique_id="soc_max",
         name="Battery Maximum State of Charge",
@@ -192,7 +191,7 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
     ),
     # only used while the SOC strategy is "External"
     RctPowerNumberEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.battery_power_extern",
         unique_id="battery_power_extern",
         name="Battery External Power",

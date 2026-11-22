@@ -138,13 +138,13 @@ async def test_phase_offset_numbers_require_god_mode(hass: HomeAssistant) -> Non
     assert hass.states.get("number.master_maintenance_charge_power") is None
     assert (
         hass.states.get(
-            "number.battery_at_master_master_battery_converter_maximum_charging_current"
+            "number.master_battery_converter_maximum_charging_current"
         )
         is None
     )
     assert (
         hass.states.get(
-            "number.battery_at_master_master_battery_converter_maximum_discharging_current"
+            "number.master_battery_converter_maximum_discharging_current"
         )
         is None
     )
@@ -241,7 +241,7 @@ async def test_write_battery_converter_current_limit(
 ) -> None:
     """Expose converter current limit writers only in God mode."""
     await setup(hass, create_entry(hass, {CONF_GOD_MODE: True}))
-    entity_id = f"number.battery_at_master_master_{number_entity_suffix}"
+    entity_id = f"number.master_{number_entity_suffix}"
     object_id = BATTERY_CONVERTER_CURRENT_IDS[object_name]
 
     state = hass.states.get(entity_id)
