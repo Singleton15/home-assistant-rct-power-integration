@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from rctclient.registry import REGISTRY
 
 from . import RctConfigEntry
-from .const import CONF_ALLOW_BATTERY_WRITES, CONF_ALLOW_WRITES, EntityUpdatePriority
+from .const import CONF_ALLOW_WRITES, EntityUpdatePriority
 from .lib.device_info_helpers import get_inverter_device_info
 from .lib.entity import RctPowerEntity, RctPowerEntityDescription
 from .models import RctConfEntryOptions
@@ -100,7 +100,7 @@ async def async_setup_entry(
     data = entry.runtime_data
     entity_descriptions: list[RctPowerSelectEntityDescription] = []
 
-    if options.get(CONF_ALLOW_BATTERY_WRITES, False):
+    if options.get(CONF_ALLOW_WRITES, False):
         entity_descriptions.append(select_entity_descriptions[0])
 
     if options.get(CONF_ALLOW_WRITES, False):

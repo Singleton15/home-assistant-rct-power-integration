@@ -39,7 +39,6 @@ CONF_RESTART_SERIAL_NUMBER: Final = "restart_serial_number"
 
 # writing settings to the inverter, off by default
 CONF_ALLOW_WRITES: Final = "allow_writes"
-CONF_ALLOW_BATTERY_WRITES: Final = "allow_battery_writes"
 CONF_GOD_MODE: Final = "god_mode"
 CONF_GOD_MODE_PASSWORD: Final = "god_mode_password"
 

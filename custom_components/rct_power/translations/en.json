@@ -28,7 +28,6 @@
           "infrequent_scan_interval": "Infrequent polling interval (s)",
           "static_scan_interval": "Static polling interval (s)",
           "allow_writes": "Allow changing inverter settings",
-          "allow_battery_writes": "Allow changing the battery settings of this inverter",
           "god_mode": "God mode",
           "restart_serial_number": "Inverter serial number for communication restart"
         },

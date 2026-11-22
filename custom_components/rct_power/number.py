@@ -26,7 +26,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import RctConfigEntry
 from .const import (
-    CONF_ALLOW_BATTERY_WRITES,
     CONF_ALLOW_WRITES,
     CONF_GOD_MODE,
     DOMAIN,
@@ -147,7 +146,6 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         unique_id="soc_target_set",
         name="Battery State of Charge Constant Target",
         icon="mdi:battery-arrow-up",
-        write_option=CONF_ALLOW_BATTERY_WRITES,
         update_priority=EntityUpdatePriority.FREQUENT,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=5,
@@ -163,7 +161,6 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         unique_id="soc_min",
         name="Battery Minimum State of Charge",
         icon="mdi:battery-arrow-down",
-        write_option=CONF_ALLOW_BATTERY_WRITES,
         update_priority=EntityUpdatePriority.FREQUENT,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=5,
@@ -179,7 +176,6 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         unique_id="soc_max",
         name="Battery Maximum State of Charge",
         icon="mdi:battery-arrow-up",
-        write_option=CONF_ALLOW_BATTERY_WRITES,
         update_priority=EntityUpdatePriority.FREQUENT,
         native_unit_of_measurement=PERCENTAGE,
         native_min_value=5,
@@ -196,7 +192,6 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
         unique_id="battery_power_extern",
         name="Battery External Power",
         icon="mdi:battery-sync",
-        write_option=CONF_ALLOW_BATTERY_WRITES,
         update_priority=EntityUpdatePriority.INFREQUENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         native_min_value=-10000,
