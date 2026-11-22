@@ -20,6 +20,16 @@ from custom_components.rct_power.const import (
 )
 
 
+async def test_config_form_supplies_repo_url(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "user"},
+    )
+
+    assert result["type"] == "form"
+    assert result["description_placeholders"] == {"repo_url": config_flow.REPO_URL}
+
+
 async def test_none_access_does_not_require_password(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     config_entry.add_to_hass(hass)

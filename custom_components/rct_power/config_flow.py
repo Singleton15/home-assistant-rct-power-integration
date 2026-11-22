@@ -40,6 +40,7 @@ _SERVICE_PASSWORD_HASH = bytes.fromhex(
     "067fb99ac1cbf2de3a3321a7271381b2fdbba06469c08df53e1ebfab398b1e39"
 )
 _PASSWORD_ITERATIONS = 600_000
+REPO_URL = "https://github.com/Singleton15/home-assistant-rct-power-integration"
 
 
 def _verify_service_password(password: str) -> bool:
@@ -89,9 +90,7 @@ class RctPowerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=self.get_title(user_input),
                     data=user_input,
-                    description_placeholders={
-                        "repo_url": "https://github.com/Singleton15/home-assistant-rct-power-integration"
-                    },
+                    description_placeholders={"repo_url": REPO_URL},
                 )
             else:
                 errors["base"] = "connect"
@@ -100,6 +99,7 @@ class RctPowerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=CONFIG_FLOW_SCHEMA,
             errors=errors,
+            description_placeholders={"repo_url": REPO_URL},
         )
 
     @staticmethod
