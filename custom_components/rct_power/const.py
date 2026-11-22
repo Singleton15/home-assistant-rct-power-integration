@@ -41,6 +41,15 @@ CONF_RESTART_SERIAL_NUMBER: Final = "restart_serial_number"
 CONF_ALLOW_WRITES: Final = "allow_writes"
 CONF_GOD_MODE: Final = "god_mode"
 CONF_GOD_MODE_PASSWORD: Final = "god_mode_password"
+CONF_SERVICE_PASSWORD: Final = "service_password"
+CONF_WRITE_ACCESS: Final = "write_access"
+
+
+class WriteAccess(StrEnum):
+    NONE = "none"
+    SERVICE = "service"
+    FACTORY = "factory"
+
 
 DEFAULT_ENTITY_PREFIX: Final = "RCT Power Storage"
 DEFAULT_PORT: Final = 8899

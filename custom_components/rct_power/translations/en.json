@@ -27,23 +27,29 @@
           "frequent_scan_interval": "Frequent polling interval (s)",
           "infrequent_scan_interval": "Infrequent polling interval (s)",
           "static_scan_interval": "Static polling interval (s)",
-          "allow_writes": "Allow changing inverter settings",
-          "god_mode": "God mode",
+          "write_access": "Write Access Level",
           "restart_serial_number": "Inverter serial number for communication restart"
         },
         "data_description": {
-          "god_mode": "⚠️ Danger Zone, this enables write support for parameters that might void the warranty!"
+          "write_access": "Factory access enables settings that might void the warranty."
         }
       },
-      "confirm_god_mode": {
-        "description": "⚠️ Warning, this enables write support for parameters that might void the warranty! These settings are not available in installer mode of the RCT Power App but only in its god mode. Enter the god mode password like in the RCT Power App.",
+      "confirm_service_access": {
+        "description": "Enter the Service password like in the RCT Power App to enable write access.",
         "data": {
-          "god_mode_password": "Password"
+          "service_password": "Service password"
+        }
+      },
+      "confirm_factory_access": {
+        "description": "⚠️ Warning, this enables write support for parameters that might void the warranty! Enter the Factory password like in the RCT Power App.",
+        "data": {
+          "god_mode_password": "Factory password"
         }
       }
     },
     "error": {
-      "invalid_password": "The God mode password is incorrect."
+      "invalid_service_password": "The Service password is incorrect.",
+      "invalid_factory_password": "The Factory password is incorrect."
     }
   }
 }

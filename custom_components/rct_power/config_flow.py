@@ -21,19 +21,36 @@ from .const import (
     CONF_GOD_MODE_PASSWORD,
     CONF_HOSTNAME,
     CONF_RESTART_SERIAL_NUMBER,
+    CONF_SERVICE_PASSWORD,
+    CONF_WRITE_ACCESS,
     DEFAULT_ENTITY_PREFIX,
     DEFAULT_PORT,
     DOMAIN,
     ConfScanInterval,
     ScanIntervalDefault,
+    WriteAccess,
 )
 from .lib.api import RctPowerApiClient
 
-_GOD_MODE_PASSWORD_SALT = bytes.fromhex("526b10a48ca2761a205d3ce91ed79293")
+_PASSWORD_SALT = bytes.fromhex("526b10a48ca2761a205d3ce91ed79293")
 _GOD_MODE_PASSWORD_HASH = bytes.fromhex(
     "95f68bc7aaebd8ae37f925ecca6505425097a8ea49147a2aa7fce5b82cfd4125"
 )
-_GOD_MODE_PASSWORD_ITERATIONS = 600_000
+_SERVICE_PASSWORD_HASH = bytes.fromhex(
+    "067fb99ac1cbf2de3a3321a7271381b2fdbba06469c08df53e1ebfab398b1e39"
+)
+_PASSWORD_ITERATIONS = 600_000
+
+
+def _verify_service_password(password: str) -> bool:
+    """Verify the Service password against its salted key derivation."""
+    candidate_hash = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode(),
+        _PASSWORD_SALT,
+        _PASSWORD_ITERATIONS,
+    )
+    return hmac.compare_digest(candidate_hash, _SERVICE_PASSWORD_HASH)
 
 
 def _verify_god_mode_password(password: str) -> bool:
@@ -41,8 +58,8 @@ def _verify_god_mode_password(password: str) -> bool:
     candidate_hash = hashlib.pbkdf2_hmac(
         "sha256",
         password.encode(),
-        _GOD_MODE_PASSWORD_SALT,
-        _GOD_MODE_PASSWORD_ITERATIONS,
+        _PASSWORD_SALT,
+        _PASSWORD_ITERATIONS,
     )
     return hmac.compare_digest(candidate_hash, _GOD_MODE_PASSWORD_HASH)
 
@@ -112,12 +129,20 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         if user_input is not None:
-            if user_input.get(
-                CONF_GOD_MODE, False
-            ) and not self.config_entry.options.get(CONF_GOD_MODE, False):
-                self._pending_options = user_input
-                return await self.async_step_confirm_god_mode()
-            return self.async_create_entry(data=user_input)
+            self._pending_options = dict(user_input)
+            write_access = WriteAccess(self._pending_options.pop(CONF_WRITE_ACCESS))
+            write_access_changed = write_access != self._current_write_access()
+            self._pending_options[CONF_ALLOW_WRITES] = write_access in (
+                WriteAccess.SERVICE,
+                WriteAccess.FACTORY,
+            )
+            self._pending_options[CONF_GOD_MODE] = write_access is WriteAccess.FACTORY
+
+            if write_access_changed and write_access is WriteAccess.SERVICE:
+                return await self.async_step_confirm_service_access()
+            if write_access_changed and write_access is WriteAccess.FACTORY:
+                return await self.async_step_confirm_factory_access()
+            return self._create_pending_entry()
 
         return self.async_show_form(
             step_id="user",
@@ -125,6 +150,7 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
                 OPTIONS_SCHEMA,
                 {
                     **self.config_entry.options,
+                    CONF_WRITE_ACCESS: self._current_write_access(),
                     CONF_RESTART_SERIAL_NUMBER: self.config_entry.options.get(
                         CONF_RESTART_SERIAL_NUMBER, self.config_entry.unique_id
                     ),
@@ -132,7 +158,44 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_confirm_god_mode(
+    def _current_write_access(self) -> WriteAccess:
+        if self.config_entry.options.get(CONF_GOD_MODE, False):
+            return WriteAccess.FACTORY
+        if self.config_entry.options.get(CONF_ALLOW_WRITES, False):
+            return WriteAccess.SERVICE
+        return WriteAccess.NONE
+
+    def _create_pending_entry(self) -> ConfigFlowResult:
+        assert self._pending_options is not None
+        return self.async_create_entry(data=self._pending_options)
+
+    async def async_step_confirm_service_access(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if await self.hass.async_add_executor_job(
+                _verify_service_password,
+                user_input[CONF_SERVICE_PASSWORD],
+            ):
+                return self._create_pending_entry()
+            errors["base"] = "invalid_service_password"
+
+        return self.async_show_form(
+            step_id="confirm_service_access",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SERVICE_PASSWORD): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD
+                        )
+                    )
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_confirm_factory_access(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
@@ -141,12 +204,11 @@ class RctPowerOptionsFlowHandler(config_entries.OptionsFlow):
                 _verify_god_mode_password,
                 user_input[CONF_GOD_MODE_PASSWORD],
             ):
-                assert self._pending_options is not None
-                return self.async_create_entry(data=self._pending_options)
-            errors["base"] = "invalid_password"
+                return self._create_pending_entry()
+            errors["base"] = "invalid_factory_password"
 
         return self.async_show_form(
-            step_id="confirm_god_mode",
+            step_id="confirm_factory_access",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_GOD_MODE_PASSWORD): selector.TextSelector(
@@ -184,9 +246,23 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             ConfScanInterval.STATIC.value, default=ScanIntervalDefault.STATIC
         ): cv.positive_int,
-        # only enable on the inverter that controls the plant (the master)
-        vol.Optional(CONF_ALLOW_WRITES, default=False): bool,
-        vol.Optional(CONF_GOD_MODE, default=False): bool,
+        vol.Optional(
+            CONF_WRITE_ACCESS,
+            default=WriteAccess.NONE,
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    selector.SelectOptionDict(value=WriteAccess.NONE, label="None"),
+                    selector.SelectOptionDict(
+                        value=WriteAccess.SERVICE, label="Service"
+                    ),
+                    selector.SelectOptionDict(
+                        value=WriteAccess.FACTORY, label="Factory"
+                    ),
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
         vol.Optional(CONF_RESTART_SERIAL_NUMBER): vol.All(str, vol.Length(min=1)),
     }
 )
