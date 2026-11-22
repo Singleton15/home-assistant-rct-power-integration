@@ -16,6 +16,7 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -37,6 +38,9 @@ PHASE_OFFSET_OBJECT_IDS = [
 ]
 MAINTENANCE_CHARGE_POWER_ID = REGISTRY.get_by_name(
     "power_mng.soc_charge_power"
+).object_id
+CALIBRATION_CHARGE_POWER_ID = REGISTRY.get_by_name(
+    "power_mng.calib_charge_power"
 ).object_id
 MAX_BATTERY_TO_GRID_POWER_ID = REGISTRY.get_by_name("p_rec_lim[1]").object_id
 BATTERY_CONVERTER_CURRENT_IDS = {
@@ -69,6 +73,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(10.0, object_id)
         elif object_id == MAINTENANCE_CHARGE_POWER_ID:
             data[object_id] = response(1000.0, object_id)
+        elif object_id == CALIBRATION_CHARGE_POWER_ID:
+            data[object_id] = response(3000.0, object_id)
         elif object_id == MAX_BATTERY_TO_GRID_POWER_ID:
             data[object_id] = response(3000.0, object_id)
         elif object_id in BATTERY_CONVERTER_CURRENT_IDS.values():
@@ -172,6 +178,47 @@ async def test_write_maintenance_charge_power(hass: HomeAssistant) -> None:
             await set_value(hass, 0, entity_id)
 
     assert hass.states.get(entity_id).state == "1500.0"  # type: ignore
+
+
+async def test_write_calibration_charge_power(hass: HomeAssistant) -> None:
+    """Expose the calibration charge power writer with inverter write permission."""
+    assert CALIBRATION_CHARGE_POWER_ID == 0xF393B7B0
+    await setup(hass, create_entry(hass, {CONF_ALLOW_WRITES: True}))
+    entity_id = "number.master_battery_calibration_charge_power"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "3000.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["min"] == 0
+    assert state.attributes["max"] == 6000
+    assert state.attributes["step"] == 1
+
+    entity_entry = er.async_get(hass).async_get(entity_id)
+    assert entity_entry is not None and entity_entry.device_id is not None
+    device = dr.async_get(hass).async_get(entity_entry.device_id)
+    assert device is not None
+    assert (DOMAIN, "INV1") in device.identifiers
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=lambda object_id, value: response(value, object_id)),
+    ) as write:
+        await set_value(hass, 0, entity_id)
+        write.assert_awaited_once_with(CALIBRATION_CHARGE_POWER_ID, 0)
+
+        await set_value(hass, 6000, entity_id)
+        assert write.await_count == 2
+        write.assert_awaited_with(CALIBRATION_CHARGE_POWER_ID, 6000)
+
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 6001, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, -1, entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 1.5, entity_id)
+
+    assert hass.states.get(entity_id).state == "6000.0"  # type: ignore
 
 
 @pytest.mark.parametrize(

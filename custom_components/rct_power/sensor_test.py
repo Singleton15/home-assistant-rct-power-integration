@@ -54,6 +54,7 @@ RAW_VALUES: dict[str, ApiResponseValue | bytes] = {
     "phase_power_offset[1]": struct.pack(">f", -1.5),
     "phase_power_offset[2]": struct.pack(">f", 2.5),
     "power_mng.soc_charge_power": struct.pack(">f", 1500.5),
+    "power_mng.calib_charge_power": struct.pack(">f", 3000.0),
     "p_rec_lim[1]": struct.pack(">f", 3000.0),
     "acc_conv.i_charge_max": struct.pack(">f", 25.0),
     "acc_conv.i_discharge_max": struct.pack(">f", 25.0),
@@ -134,6 +135,10 @@ async def test_battery_module_sensors(
     assert state.state == "3.312"
     assert state.attributes["cell_voltages"] == [3.301, 3.312]
     assert state.attributes["cell_temperatures"] == [21, 24]
+
+    state = get_state(hass, "master_battery_calibration_charge_power")
+    assert state.state == "3000.0"
+    assert state.attributes["unit_of_measurement"] == "W"
 
     state = get_state(hass, "master_battery_module_1_cell_voltage_spread")
     assert state.state == "11"

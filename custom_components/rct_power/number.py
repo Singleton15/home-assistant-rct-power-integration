@@ -81,6 +81,18 @@ number_entity_descriptions: list[RctPowerNumberEntityDescription] = [
     ),
     RctPowerNumberEntityDescription(
         get_device_info=get_inverter_device_info,
+        key="power_mng.calib_charge_power",
+        name="Battery Calibration Charge Power",
+        update_priority=EntityUpdatePriority.STATIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_min_value=0,
+        native_max_value=6000,
+        native_step=1,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RctPowerNumberEntityDescription(
+        get_device_info=get_inverter_device_info,
         key="p_rec_lim[1]",
         name="Max. Battery to Grid Power",
         update_priority=EntityUpdatePriority.INFREQUENT,
