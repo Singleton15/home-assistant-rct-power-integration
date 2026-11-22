@@ -142,6 +142,7 @@ depending on your preference.
 | Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation      | infrequent        |
 | Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid                    | static            |
 | Max. Battery to Grid Power                   | W    | the configured maximum battery power to the grid                                     | infrequent        |
+| Grid Power Offset                            | W    | the configured grid power offset; Factory-level access only                           | static            |
 
 ### Battery
 
@@ -360,6 +361,11 @@ Factory-level write access adds the
 `number.<prefix>_power_sensor_phase_3_offset_correction` entities. They set
 the corresponding phase power offsets from 0 to 50 in steps of 1. The phase
 power gain correction sensors remain read-only.
+
+It also adds the `sensor.<prefix>_grid_power_offset` and
+`number.<prefix>_grid_power_offset` entities for `grid_power_offset`. The
+number sets the offset from -50 to 50 W in 1 W steps; positive values charge
+the battery from the grid.
 
 ### Controlling the battery
 

@@ -965,6 +965,15 @@ inverter_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
     ),
     RctPowerSensorEntityDescription(
         get_device_info=get_inverter_device_info,
+        key="grid_power_offset",
+        name="Grid Power Offset",
+        requires_god_mode=True,
+        update_priority=EntityUpdatePriority.STATIC,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RctPowerSensorEntityDescription(
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_charge_power",
         name="Maintenance charge power",
         requires_god_mode=True,

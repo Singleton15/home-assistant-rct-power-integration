@@ -43,6 +43,7 @@ CALIBRATION_CHARGE_POWER_ID = REGISTRY.get_by_name(
     "power_mng.calib_charge_power"
 ).object_id
 MAX_BATTERY_TO_GRID_POWER_ID = REGISTRY.get_by_name("p_rec_lim[1]").object_id
+GRID_POWER_OFFSET_ID = REGISTRY.get_by_name("grid_power_offset").object_id
 BATTERY_CONVERTER_CURRENT_IDS = {
     "acc_conv.i_charge_max": 0xB0FA4D23,
     "acc_conv.i_discharge_max": 0xC642B9D6,
@@ -77,6 +78,8 @@ async def fake_get_data(object_ids: list[int]) -> RctPowerData:
             data[object_id] = response(3000.0, object_id)
         elif object_id == MAX_BATTERY_TO_GRID_POWER_ID:
             data[object_id] = response(3000.0, object_id)
+        elif object_id == GRID_POWER_OFFSET_ID:
+            data[object_id] = response(10.0, object_id)
         elif object_id in BATTERY_CONVERTER_CURRENT_IDS.values():
             data[object_id] = response(25.0, object_id)
     return data
@@ -128,6 +131,8 @@ async def test_phase_offset_numbers_require_god_mode(hass: HomeAssistant) -> Non
     """Regular write permission does not expose the God mode offset controls."""
     await setup(hass, create_entry(hass, {CONF_ALLOW_WRITES: True}))
 
+    assert hass.states.get("number.master_grid_power_offset") is None
+    assert hass.states.get("sensor.master_grid_power_offset") is None
     for phase in range(1, 4):
         assert (
             hass.states.get(
@@ -137,17 +142,56 @@ async def test_phase_offset_numbers_require_god_mode(hass: HomeAssistant) -> Non
         )
     assert hass.states.get("number.master_maintenance_charge_power") is None
     assert (
-        hass.states.get(
-            "number.master_battery_converter_maximum_charging_current"
-        )
+        hass.states.get("number.master_battery_converter_maximum_charging_current")
         is None
     )
     assert (
-        hass.states.get(
-            "number.master_battery_converter_maximum_discharging_current"
-        )
+        hass.states.get("number.master_battery_converter_maximum_discharging_current")
         is None
     )
+
+
+async def test_grid_power_offset_requires_factory_mode(hass: HomeAssistant) -> None:
+    """Expose the grid offset read/write entities only in Factory mode."""
+    assert GRID_POWER_OFFSET_ID == 0x5A55C519
+    assert REGISTRY.get_by_id(0x2848A1EE).name == "grid_offset"
+    await setup(hass, create_entry(hass, {CONF_GOD_MODE: True}))
+    number_entity_id = "number.master_grid_power_offset"
+    sensor_entity_id = "sensor.master_grid_power_offset"
+
+    number_state = hass.states.get(number_entity_id)
+    assert number_state is not None
+    assert number_state.state == "10.0"
+    assert number_state.attributes["unit_of_measurement"] == "W"
+    assert number_state.attributes["min"] == -50
+    assert number_state.attributes["max"] == 50
+    assert number_state.attributes["step"] == 1
+
+    sensor_state = hass.states.get(sensor_entity_id)
+    assert sensor_state is not None
+    assert sensor_state.state == "10.0"
+    assert sensor_state.attributes["unit_of_measurement"] == "W"
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_write_value",
+        new=AsyncMock(side_effect=lambda object_id, value: response(value, object_id)),
+    ) as write:
+        await set_value(hass, -50, number_entity_id)
+        write.assert_awaited_once_with(GRID_POWER_OFFSET_ID, -50)
+
+        await set_value(hass, 50, number_entity_id)
+        assert write.await_count == 2
+        write.assert_awaited_with(GRID_POWER_OFFSET_ID, 50)
+
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, -51, number_entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 51, number_entity_id)
+        with pytest.raises(ServiceValidationError):
+            await set_value(hass, 0.5, number_entity_id)
+
+    assert hass.states.get(number_entity_id).state == "50.0"  # type: ignore
+    assert hass.states.get(sensor_entity_id).state == "50.0"  # type: ignore
 
 
 async def test_write_maintenance_charge_power(hass: HomeAssistant) -> None:

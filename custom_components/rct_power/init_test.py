@@ -118,8 +118,9 @@ def test_god_mode_object_ids_are_only_polled_when_enabled(monkeypatch) -> None:
         description
         for description in all_entity_descriptions
         if description.requires_god_mode
+        and description.update_priority == EntityUpdatePriority.STATIC
     ]
-    assert len(descriptions) == 6
+    assert len(descriptions) == 7
     monkeypatch.setattr(
         "custom_components.rct_power.all_entity_descriptions", descriptions
     )
