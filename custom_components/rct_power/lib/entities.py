@@ -217,7 +217,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         native_unit_of_measurement="%",
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_min",
         name="Battery Minimum State of Charge",
         update_priority=EntityUpdatePriority.FREQUENT,
@@ -225,7 +225,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         native_unit_of_measurement="%",
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_max",
         name="Battery Maximum State of Charge",
         update_priority=EntityUpdatePriority.FREQUENT,
@@ -286,7 +286,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.calib_charge_power",
         name="Battery Calibration Charge Power",
         update_priority=EntityUpdatePriority.STATIC,
@@ -301,7 +301,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="acc_conv.i_charge_max",
         name="Battery Converter Maximum Charging Current",
         requires_god_mode=True,
@@ -310,7 +310,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="acc_conv.i_discharge_max",
         name="Battery Converter Maximum Discharging Current",
         requires_god_mode=True,
@@ -319,13 +319,13 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_strategy",
         name="Battery State of Charge Strategy",
         update_priority=EntityUpdatePriority.INFREQUENT,
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.soc_target_set",
         name="Battery State of Charge Constant Target",
         update_priority=EntityUpdatePriority.FREQUENT,
@@ -333,7 +333,7 @@ battery_sensor_entity_descriptions: list[RctPowerSensorEntityDescription] = [
         native_unit_of_measurement="%",
     ),
     RctPowerSensorEntityDescription(
-        get_device_info=get_battery_device_info,
+        get_device_info=get_inverter_device_info,
         key="power_mng.battery_power_extern",
         name="Battery External Power",
         update_priority=EntityUpdatePriority.INFREQUENT,

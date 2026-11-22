@@ -136,7 +136,7 @@ async def test_battery_module_sensors(
     assert state.attributes["cell_voltages"] == [3.301, 3.312]
     assert state.attributes["cell_temperatures"] == [21, 24]
 
-    state = get_state(hass, "master_battery_calibration_charge_power")
+    state = get_state(hass, "battery_calibration_charge_power")
     assert state.state == "3000.0"
     assert state.attributes["unit_of_measurement"] == "W"
 
@@ -356,13 +356,13 @@ async def test_power_sensor_correction_sensors_require_god_mode(
     assert hass.states.get("sensor.master_maintenance_charge_power") is None
     assert (
         hass.states.get(
-            "sensor.battery_at_master_master_battery_converter_maximum_charging_current"
+            "sensor.master_battery_converter_maximum_charging_current"
         )
         is None
     )
     assert (
         hass.states.get(
-            "sensor.battery_at_master_master_battery_converter_maximum_discharging_current"
+            "sensor.master_battery_converter_maximum_discharging_current"
         )
         is None
     )

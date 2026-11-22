@@ -219,7 +219,7 @@ async def test_write_battery_external_power(hass: HomeAssistant) -> None:
     assert hass.states.get(NUMBER_ENTITY_ID).state == "-3000.0"  # type: ignore
     # the read-only sensor follows the written value
     assert (
-        hass.states.get("sensor.battery_at_master_master_battery_external_power").state
+        hass.states.get("sensor.master_battery_external_power").state
         == "-3000.0"
     )  # type: ignore
 

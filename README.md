@@ -164,17 +164,12 @@ depending on your preference.
 | Battery State of Charge Target                | %    | the state of charge of the battery aimed for by the system                    | frequent          |
 | Battery State of Charge Low Target            | %    | the lower state-of-charge target reported by the battery                      | frequent          |
 | Battery State of Charge High Target           | %    | the upper state-of-charge target reported by the battery                      | frequent          |
-| Battery Minimum State of Charge               | %    | the configured minimum state of charge of the battery for regular operation   | frequent          |
 | Battery Minimum State of Charge (island)      | %    | the minimum state of charge of the battery to maintain as an island backup    | frequent          |
-| Battery Maximum State of Charge               | %    | the maximum state of charge of the battery to aim for to improve battery life | frequent          |
 | Battery State of Health                       | %    | the estimated state of health of the battery                                  | infrequent        |
 | Battery Stored Energy                         | Wh   | the cumulative energy fed into the battery                                    | frequent          |
 | Battery Used Energy                           | Wh   | the cumulative energy consumed from the battery                               | frequent          |
 | Battery Status                                |      | the current battery status                                                    | frequent          |
 | Battery Maximum Charging Current              | A    | the charging current currently allowed by the BMS                             | frequent          |
-| Battery Converter Maximum Charging Current    | A    | converter charge-current limit; Factory-level write access only (default: 25 A)    | infrequent        |
-| Battery Converter Maximum Discharging Current | A    | converter discharge-current limit; Factory-level write access only (default: 25 A) | infrequent        |
-| Battery State of Charge Strategy              |      | the SOC target selection (e.g. 4 = internal, 2 = external)                    | infrequent        |
 | Battery Efficiency                            | %    | the ratio of used to stored energy                                            | infrequent        |
 | Next Battery Calibration Date                 |      | the date and time of the next planned battery calibration                     | infrequent        |
 
@@ -226,7 +221,6 @@ with a markdown card.
 | Battery Balancing                | binary sensor | the balancing bit of the battery status                                                              | frequent          |
 | Battery Calibration              | binary sensor | the battery status reports a calibration charge                                                      | frequent          |
 | Battery Calibration Interval     | d             | how often the inverter runs a calibration charge                                                     | static            |
-| Battery Calibration Charge Power | W             | the charging power used for the calibration                                                          | static            |
 
 All towers of an inverter sit on the same DC bus, so a connected tower has
 practically the bus voltage. When the BMS opens the contactor of a tower (for
@@ -300,6 +294,14 @@ valid reading is `null`.
 | Core Temperature                                | °C   | the instantaneous temperature of the invertor core                                   | frequent          |
 | Heat Sink Temperature                           | °C   | the instantaneous temperature of the invertor heat sink                              | frequent          |
 | Heat Sink (battery actuator) Temperature        | °C   | the instantaneous temperature of the battery actuator heat sink                      | frequent          |
+| Battery Minimum State of Charge                  | %    | the configured minimum state of charge for regular operation                         | frequent          |
+| Battery Maximum State of Charge                  | %    | the configured maximum state of charge for battery-life optimization                 | frequent          |
+| Battery State of Charge Strategy                 |      | the SOC target selection (e.g. internal, external or constant)                       | infrequent        |
+| Battery State of Charge Constant Target          | %    | the configured SOC target while the strategy is Constant                             | frequent          |
+| Battery External Power                           | W    | the configured battery power while the strategy is External                           | infrequent        |
+| Battery Calibration Charge Power                 | W    | the charging power used for the calibration; configurable from 0 to 6,000 W         | static            |
+| Battery Converter Maximum Charging Current       | A    | the configured converter charge-current limit; Factory-level write access only        | infrequent        |
+| Battery Converter Maximum Discharging Current    | A    | the configured converter discharge-current limit; Factory-level write access only     | infrequent        |
 
 ### Reducing communication load
 
@@ -361,11 +363,11 @@ power gain correction sensors remain read-only.
 
 ### Controlling the battery
 
-With Factory-level write access selected, the battery converter charge and
-discharge current limit sensors report `acc_conv.i_charge_max` and
+With Factory-level write access selected, the inverter-owned battery converter
+charge and discharge current limit sensors report `acc_conv.i_charge_max` and
 `acc_conv.i_discharge_max`.
-Their corresponding `number.<battery>_battery_converter_maximum_charging_current`
-and `number.<battery>_battery_converter_maximum_discharging_current` entities
+Their corresponding `number.<prefix>_battery_converter_maximum_charging_current`
+and `number.<prefix>_battery_converter_maximum_discharging_current` entities
 set the limits from 1 to 25 A in 1 A steps (default: 25 A). These sensors are
 polled infrequently.
 
@@ -381,22 +383,22 @@ Every inverter keeps its own battery settings, a slave does not take them
 from the master. Select `Service` write access in the options of each inverter
 with a battery to get:
 
-- `number.<battery>_battery_calibration_charge_power`
+- `number.<prefix>_battery_calibration_charge_power`
   (`power_mng.calib_charge_power`) sets battery calibration charge power from
   0 to 6,000 W in 1 W steps.
-- `select.<battery>_battery_state_of_charge_strategy` (`power_mng.soc_strategy`)
+- `select.<prefix>_battery_state_of_charge_strategy` (`power_mng.soc_strategy`)
   chooses how the inverter sets the battery SOC target: `Internal` (the
   default, based on the solar forecast), `Constant`, `External`, `Schedule` or
   the undocumented `SOC target = SOC`. The undocumented `Middle battery
 voltage` is not offered and shows as unknown.
-- `number.<battery>_battery_state_of_charge_constant_target`
+- `number.<prefix>_battery_state_of_charge_constant_target`
   (`power_mng.soc_target_set`) is the SOC target in % while the strategy is
   `Constant`.
-- `number.<battery>_battery_minimum_state_of_charge` (`power_mng.soc_min`)
+- `number.<prefix>_battery_minimum_state_of_charge` (`power_mng.soc_min`)
   sets the minimum SOC in % for regular operation.
-- `number.<battery>_battery_maximum_state_of_charge` (`power_mng.soc_max`)
+- `number.<prefix>_battery_maximum_state_of_charge` (`power_mng.soc_max`)
   sets the maximum SOC in %.
-- `number.<battery>_battery_external_power` (`power_mng.battery_power_extern`)
+- `number.<prefix>_battery_external_power` (`power_mng.battery_power_extern`)
   is the battery power in W while the strategy is `External`; positive values
   discharge and negative values charge the battery. Charging from the grid with
   more than the maintenance charge power also requires
