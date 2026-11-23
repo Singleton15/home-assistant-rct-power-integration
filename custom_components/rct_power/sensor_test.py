@@ -11,6 +11,7 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from rctclient.utils import decode_value
 
@@ -406,3 +407,59 @@ async def test_device_without_serial_numbers(hass: HomeAssistant) -> None:
     assert (DOMAIN, "INV-FROM-FLOW") in identifiers
     assert (DOMAIN, "INV-FROM-FLOW-tower-1") in identifiers
     assert (DOMAIN, "INV-FROM-FLOW-tower-2") in identifiers
+
+
+async def test_update_entity_refreshes_its_polling_coordinator(
+    hass: HomeAssistant,
+) -> None:
+    """A manual update refreshes all values in the entity's polling group."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOSTNAME: "localhost",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_ENTITY_PREFIX: "Master",
+        },
+        entry_id="test",
+    )
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "homeassistant", {})
+    target_object_id = REGISTRY.get_by_name("g_sync.p_ac_grid_sum_lp").object_id
+    battery_power_object_id = REGISTRY.get_by_name("g_sync.p_acc_lp").object_id
+    requested_object_ids: list[list[int]] = []
+    should_update = False
+
+    async def get_data(object_ids: list[int]) -> RctPowerData:
+        data = await fake_get_data(object_ids)
+        if should_update:
+            requested_object_ids.append(object_ids)
+            data[target_object_id] = ValidApiResponse(
+                object_id=target_object_id,
+                time=datetime.now(tz=UTC),
+                value=3,
+            )
+        return data
+
+    with patch(
+        "custom_components.rct_power.RctPowerApiClient.async_get_data",
+        side_effect=get_data,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = config_entry.runtime_data.update_coordinators[
+            EntityUpdatePriority.VERY_FREQUENT
+        ]
+        should_update = True
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {"entity_id": "sensor.master_grid_power"},
+            blocking=True,
+        )
+
+    assert len(requested_object_ids) == 1
+    assert set(requested_object_ids[0]) == set(coordinator.object_ids)
+    assert target_object_id in requested_object_ids[0]
+    assert battery_power_object_id in requested_object_ids[0]
+    assert hass.states.get("sensor.master_grid_power").state == "3"

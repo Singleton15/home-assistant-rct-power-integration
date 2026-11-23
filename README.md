@@ -56,6 +56,14 @@ After installation the integration allows for the following configuration parame
   password and includes Service access.
 - `Inverter serial number for communication restart`: Serial number used for HTTP Basic authentication when restarting the communication module. It defaults to the detected inverter serial number.
 
+To manually refresh an entity, use Home Assistant's `homeassistant.update_entity`
+action. The integration refreshes the polling coordinator(s) that provide the
+selected entity's values. Each such refresh also updates other entities in that
+polling group and resets its polling interval; other groups are unaffected.
+This lets you use a variable polling rate: set a longer interval for a group,
+then use an automation to request updates from any entity in that group at the
+desired rate only when needed.
+
 The `rct_power.restart_communication` action can be called from an automation or
 script to restart an inverter's communication module. This is the same reboot
 operation as pressing **Reboot** in the inverter's web interface, and can be
@@ -74,8 +82,12 @@ data:
 
 Only lower the very frequent polling interval (for example, to `5` seconds) after
 disabling entities you do not need. See [Reducing communication
-load](#reducing-communication-load). A shorter interval for the `Battery Power`
-and `Grid Power` entities may be useful for a PV-surplus EV charging setup.
+load](#reducing-communication-load). For a PV-surplus EV charging setup, you can
+instead call Home Assistant's `homeassistant.update_entity` action on either the
+`Battery Power` or `Grid Power` entity from an automation every 5 seconds while
+surplus charging is active. This refreshes the whole very-frequent polling
+group, including both power values, without increasing the polling rate when
+surplus charging is inactive.
 
 ## Usage with the built-in energy dashboard
 

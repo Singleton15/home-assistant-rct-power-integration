@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from asyncio.tasks import gather
-
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -31,12 +29,3 @@ class MultiCoordinatorEntity(Entity):
     @callback
     def _handle_coordinator_update(self) -> None:
         self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        # Ignore manual update requests if the entity is disabled
-        if not self.enabled:
-            return
-
-        await gather(
-            *[coordinator.async_request_refresh() for coordinator in self.coordinators]
-        )

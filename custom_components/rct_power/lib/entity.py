@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from asyncio.tasks import gather
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -68,6 +69,20 @@ class RctPowerEntity(MultiCoordinatorEntity):
                 return latest_response
 
         return default
+
+    async def async_update(self) -> None:
+        """Refresh the polling coordinators that provide this entity's data."""
+        if not self.enabled:
+            return
+
+        object_ids = {object_info.object_id for object_info in self.object_infos}
+        await gather(
+            *(
+                coordinator.async_request_refresh()
+                for coordinator in self.coordinators
+                if object_ids.intersection(coordinator.object_ids)
+            )
+        )
 
     def get_api_response_by_name(
         self, object_name: str, default: ApiResponse | None = None
