@@ -25,8 +25,9 @@ def get_inverter_device_id(entity: RctPowerEntity) -> dict[str, str]:
     The sensor platform registers the inverter device before adding any
     entities, so it is normally found.
     """
-    device = dr.async_get(entity.hass).async_get_device(
-        identifiers={(DOMAIN, get_inverter_sn(entity))}
+    device = dr.async_get(entity.hass).async_get_device_by_identifier(
+        identifier=(DOMAIN, get_inverter_sn(entity)),
+        config_entry_id=entity.config_entry.entry_id,
     )
     return {"via_device_id": device.id} if device else {}
 

@@ -186,7 +186,10 @@ async def test_battery_module_sensors(
     assert (DOMAIN, "BMS2") in device.identifiers
 
     # battery towers hang off the inverter, linked without the deprecated via_device
-    inverter = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, "INV1")})
+    inverter = dr.async_get(hass).async_get_device_by_identifier(
+        identifier=(DOMAIN, "INV1"),
+        config_entry_id=config_entry.entry_id,
+    )
     assert inverter is not None
     assert device.via_device_id == inverter.id
     assert "via_device" not in caplog.text
