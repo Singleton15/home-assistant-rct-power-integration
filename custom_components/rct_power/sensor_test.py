@@ -433,7 +433,7 @@ async def test_update_entity_refreshes_its_polling_coordinator(
 
     def record_update_event(event: Event) -> None:
         update_events.append(
-            (event.data["entity_prefix"], event.data["update_priority"])
+            (event.data["config_entry_id"], event.data["update_priority"])
         )
         state = hass.states.get("sensor.master_grid_power")
         grid_power_at_event.append(state.state if state else None)
@@ -459,10 +459,10 @@ async def test_update_entity_refreshes_its_polling_coordinator(
         await hass.async_block_till_done()
 
         assert update_events == [
-            ("Master", "very_frequent"),
-            ("Master", "frequent"),
-            ("Master", "infrequent"),
-            ("Master", "static"),
+            ("test", "very_frequent"),
+            ("test", "frequent"),
+            ("test", "infrequent"),
+            ("test", "static"),
         ]
 
         coordinator = config_entry.runtime_data.update_coordinators[
@@ -481,6 +481,6 @@ async def test_update_entity_refreshes_its_polling_coordinator(
     assert target_object_id in requested_object_ids[0]
     assert battery_power_object_id in requested_object_ids[0]
     assert hass.states.get("sensor.master_grid_power").state == "3"
-    assert update_events[-1] == ("Master", "very_frequent")
+    assert update_events[-1] == ("test", "very_frequent")
     assert len(update_events) == 5
     assert grid_power_at_event[-1] == "3"

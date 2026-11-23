@@ -67,18 +67,17 @@ desired rate only when needed.
 After a polling group has been refreshed successfully and its entities have
 been updated, the integration fires the `rct_power_update_complete` event. Its
 `update_priority` is `very_frequent`, `frequent`, `infrequent`, or `static`, and
-`entity_prefix` contains the configured name prefix used by the inverter's
-entities. The prefix is optional when you have one inverter; include it in the
-event filter to distinguish an inverter when you have multiple. For example,
-trigger an automation after the very-frequent group for the `Master` inverter
-updates with:
+`config_entry_id` identifies the inverter's Home Assistant config entry. It can
+be omitted when you have one inverter; include it in the event filter to
+distinguish an inverter when you have multiple. To get the ID, listen for the
+event in Developer Tools and copy it from the event data. For example:
 
 ```yaml
 triggers:
   - trigger: event
     event_type: rct_power_update_complete
     event_data:
-      entity_prefix: Master
+      config_entry_id: YOUR_CONFIG_ENTRY_ID
       update_priority: very_frequent
 ```
 

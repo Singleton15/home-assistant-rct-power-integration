@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ENTITY_PREFIX, DOMAIN, EVENT_UPDATE_COMPLETE, LOGGER
+from .const import DOMAIN, EVENT_UPDATE_COMPLETE, LOGGER
 from .lib.api import (
     ApiResponseValue,
     InvalidApiResponse,
@@ -87,7 +87,7 @@ class RctPowerDataUpdateCoordinator(DataUpdateCoordinator[RctPowerData]):
             self.hass.bus.async_fire(
                 EVENT_UPDATE_COMPLETE,
                 {
-                    "entity_prefix": self.config_entry.data[CONF_ENTITY_PREFIX],
+                    "config_entry_id": self.config_entry.entry_id,
                     "update_priority": self.update_priority,
                 },
             )
