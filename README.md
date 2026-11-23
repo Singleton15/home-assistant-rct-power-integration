@@ -64,6 +64,24 @@ This lets you use a variable polling rate: set a longer interval for a group,
 then use an automation to request updates from any entity in that group at the
 desired rate only when needed.
 
+After a polling group has been refreshed successfully and its entities have
+been updated, the integration fires the `rct_power_update_complete` event. Its
+`update_priority` is `very_frequent`, `frequent`, `infrequent`, or `static`, and
+`entity_prefix` contains the configured name prefix used by the inverter's
+entities. The prefix is optional when you have one inverter; include it in the
+event filter to distinguish an inverter when you have multiple. For example,
+trigger an automation after the very-frequent group for the `Master` inverter
+updates with:
+
+```yaml
+triggers:
+  - trigger: event
+    event_type: rct_power_update_complete
+    event_data:
+      entity_prefix: Master
+      update_priority: very_frequent
+```
+
 The `rct_power.restart_communication` action can be called from an automation or
 script to restart an inverter's communication module. This is the same reboot
 operation as pressing **Reboot** in the inverter's web interface, and can be
@@ -153,38 +171,38 @@ depending on your preference.
 | Grid Energy Production Day/Month/Year/Total  | Wh   | the cumulative energy fed into the grid                                               | infrequent        |
 | Grid Energy Production Absolute Total        | kWh  | the absolute value of the cumulative energy fed into the grid since installation      | infrequent        |
 | Grid Maximum Feed Power                      | W    | the maximum power the inverter is configured to feed into the grid                    | static            |
-| Max. Battery to Grid Power                   | W    | the configured maximum battery power to the grid                                     | infrequent        |
+| Max. Battery to Grid Power                   | W    | the configured maximum battery power to the grid                                      | infrequent        |
 | Grid Power Offset                            | W    | the configured grid power offset; Factory-level access only                           | static            |
 
 ### Battery
 
-| Entity name                                   | Unit | Description                                                                   | Polling frequency |
-| --------------------------------------------- | ---- | ----------------------------------------------------------------------------- | ----------------- |
-| Battery Management System Serial Number       |      | the serial number reported by the battery management system                   | static            |
-| Battery Management System Software Version    |      | the software version reported by the battery management system                | static            |
-| Battery Charge Total                          | Ah   | the cumulative amp-hours charged into the battery                             | infrequent        |
-| Battery Discharge Total                       | Ah   | the cumulative amp-hours discharged from the battery                          | infrequent        |
-| Battery Power                                 | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the battery | very frequent     |
-| Battery Current                               | A    | the instantaneous current flowing from or to the battery                      | frequent          |
-| Battery Voltage                               | V    | the instantaneous voltage of the battery                                      | frequent          |
-| Battery Maximum Charging Voltage              | V    | the maximum charging voltage reported by the battery                          | frequent          |
-| Battery Minimum Discharging Voltage           | V    | the minimum discharging voltage reported by the battery                       | frequent          |
-| Battery Maximum Discharging Current           | A    | the maximum discharging current reported by the battery                       | frequent          |
-| Battery Temperature                           | °C   | the instantaneous temperature of the battery                                  | frequent          |
-| Battery Charge Capacity                       | Ah   | the battery's charge capacity                                                 | infrequent        |
-| Battery Cycles                                |      | the recorded full charge/discharge cycles of the battery                      | infrequent        |
-| Battery State of Charge                       | %    | the instantaneous state of charge of the battery                              | frequent          |
-| Battery State of Charge Target                | %    | the state of charge of the battery aimed for by the system                    | frequent          |
-| Battery State of Charge Low Target            | %    | the lower state-of-charge target reported by the battery                      | frequent          |
-| Battery State of Charge High Target           | %    | the upper state-of-charge target reported by the battery                      | frequent          |
-| Battery Minimum State of Charge (island)      | %    | the minimum state of charge of the battery to maintain as an island backup    | frequent          |
-| Battery State of Health                       | %    | the estimated state of health of the battery                                  | infrequent        |
-| Battery Stored Energy                         | Wh   | the cumulative energy fed into the battery                                    | frequent          |
-| Battery Used Energy                           | Wh   | the cumulative energy consumed from the battery                               | frequent          |
-| Battery Status                                |      | the current battery status                                                    | frequent          |
-| Battery Maximum Charging Current              | A    | the charging current currently allowed by the BMS                             | frequent          |
-| Battery Efficiency                            | %    | the ratio of used to stored energy                                            | infrequent        |
-| Next Battery Calibration Date                 |      | the date and time of the next planned battery calibration                     | infrequent        |
+| Entity name                                | Unit | Description                                                                   | Polling frequency |
+| ------------------------------------------ | ---- | ----------------------------------------------------------------------------- | ----------------- |
+| Battery Management System Serial Number    |      | the serial number reported by the battery management system                   | static            |
+| Battery Management System Software Version |      | the software version reported by the battery management system                | static            |
+| Battery Charge Total                       | Ah   | the cumulative amp-hours charged into the battery                             | infrequent        |
+| Battery Discharge Total                    | Ah   | the cumulative amp-hours discharged from the battery                          | infrequent        |
+| Battery Power                              | W    | the instantaneous power consumed from (`> 0`) or fed into (`< 0`) the battery | very frequent     |
+| Battery Current                            | A    | the instantaneous current flowing from or to the battery                      | frequent          |
+| Battery Voltage                            | V    | the instantaneous voltage of the battery                                      | frequent          |
+| Battery Maximum Charging Voltage           | V    | the maximum charging voltage reported by the battery                          | frequent          |
+| Battery Minimum Discharging Voltage        | V    | the minimum discharging voltage reported by the battery                       | frequent          |
+| Battery Maximum Discharging Current        | A    | the maximum discharging current reported by the battery                       | frequent          |
+| Battery Temperature                        | °C   | the instantaneous temperature of the battery                                  | frequent          |
+| Battery Charge Capacity                    | Ah   | the battery's charge capacity                                                 | infrequent        |
+| Battery Cycles                             |      | the recorded full charge/discharge cycles of the battery                      | infrequent        |
+| Battery State of Charge                    | %    | the instantaneous state of charge of the battery                              | frequent          |
+| Battery State of Charge Target             | %    | the state of charge of the battery aimed for by the system                    | frequent          |
+| Battery State of Charge Low Target         | %    | the lower state-of-charge target reported by the battery                      | frequent          |
+| Battery State of Charge High Target        | %    | the upper state-of-charge target reported by the battery                      | frequent          |
+| Battery Minimum State of Charge (island)   | %    | the minimum state of charge of the battery to maintain as an island backup    | frequent          |
+| Battery State of Health                    | %    | the estimated state of health of the battery                                  | infrequent        |
+| Battery Stored Energy                      | Wh   | the cumulative energy fed into the battery                                    | frequent          |
+| Battery Used Energy                        | Wh   | the cumulative energy consumed from the battery                               | frequent          |
+| Battery Status                             |      | the current battery status                                                    | frequent          |
+| Battery Maximum Charging Current           | A    | the charging current currently allowed by the BMS                             | frequent          |
+| Battery Efficiency                         | %    | the ratio of used to stored energy                                            | infrequent        |
+| Next Battery Calibration Date              |      | the date and time of the next planned battery calibration                     | infrequent        |
 
 ### Battery towers, modules and cells
 
@@ -228,12 +246,12 @@ with a markdown card.
 
 #### Tower connection, balancing and calibration
 
-| Entity name                      | Type          | Description                                                                                          | Polling frequency |
-| -------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- | ----------------- |
-| Battery (Tower 2) Connection     | binary sensor | off when the tower voltage differs from the battery voltage measured by the inverter by 10 V or more | frequent          |
-| Battery Balancing                | binary sensor | the balancing bit of the battery status                                                              | frequent          |
-| Battery Calibration              | binary sensor | the battery status reports a calibration charge                                                      | frequent          |
-| Battery Calibration Interval     | d             | how often the inverter runs a calibration charge                                                     | static            |
+| Entity name                  | Type          | Description                                                                                          | Polling frequency |
+| ---------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- | ----------------- |
+| Battery (Tower 2) Connection | binary sensor | off when the tower voltage differs from the battery voltage measured by the inverter by 10 V or more | frequent          |
+| Battery Balancing            | binary sensor | the balancing bit of the battery status                                                              | frequent          |
+| Battery Calibration          | binary sensor | the battery status reports a calibration charge                                                      | frequent          |
+| Battery Calibration Interval | d             | how often the inverter runs a calibration charge                                                     | static            |
 
 All towers of an inverter sit on the same DC bus, so a connected tower has
 practically the bus voltage. When the BMS opens the contactor of a tower (for
@@ -288,33 +306,33 @@ valid reading is `null`.
 
 ### Inverter
 
-| Entity name                                     | Unit | Description                                                                          | Polling frequency |
-| ----------------------------------------------- | ---- | ------------------------------------------------------------------------------------ | ----------------- |
-| Inverter Battery Voltage                        | V    | the instantaneous battery voltage measured by the inverter                           | frequent          |
-| Inverter Device Name                            |      | the device name reported by the inverter                                             | static            |
-| Inverter AC Power                               | W    | the instantaneous AC power transmitted by the inverter                               | frequent          |
-| Inverter Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by the inverter                                       | infrequent        |
-| Inverter Power P1/P2/P3                         | W    | the instantaneous power consumed or generated by the inverter                        | frequent          |
+| Entity name                                     | Unit | Description                                                                               | Polling frequency |
+| ----------------------------------------------- | ---- | ----------------------------------------------------------------------------------------- | ----------------- |
+| Inverter Battery Voltage                        | V    | the instantaneous battery voltage measured by the inverter                                | frequent          |
+| Inverter Device Name                            |      | the device name reported by the inverter                                                  | static            |
+| Inverter AC Power                               | W    | the instantaneous AC power transmitted by the inverter                                    | frequent          |
+| Inverter Energy Production Day/Month/Year/Total | Wh   | the cumulative energy produced by the inverter                                            | infrequent        |
+| Inverter Power P1/P2/P3                         | W    | the instantaneous power consumed or generated by the inverter                             | frequent          |
 | Maintenance charge power                        | W    | the configured maintenance charge power; Factory-level write access only (default: 100 W) | infrequent        |
-| Power Sensor Phase 1/2/3 Offset Correction      |      | the power sensor offset correction reported for the corresponding phase              | static            |
-| Power Sensor Phase 1/2/3 Gain Correction        |      | the power sensor gain correction factor for the corresponding phase                  | static            |
-| Inverter Serial Number                          |      | the serial number of the inverter                                                    | static            |
-| Inverter Software Version                       |      | the software version reported by the inverter                                        | infrequent        |
-| RS485 Modbus Mode                               |      | whether RS485 is configured as Modbus master or slave                                | infrequent        |
-| Date of Last Update                             |      | the date and time of the inverter's last update                                      | infrequent        |
-| Inverter DC Start Voltage                       | V    | the configured DC voltage at which the inverter starts                               | static            |
-| Faults                                          |      | a bitmask of the failures reported by the inverter                                   | frequent          |
-| Core Temperature                                | °C   | the instantaneous temperature of the invertor core                                   | frequent          |
-| Heat Sink Temperature                           | °C   | the instantaneous temperature of the invertor heat sink                              | frequent          |
-| Heat Sink (battery actuator) Temperature        | °C   | the instantaneous temperature of the battery actuator heat sink                      | frequent          |
-| Battery Minimum State of Charge                  | %    | the configured minimum state of charge for regular operation                         | frequent          |
-| Battery Maximum State of Charge                  | %    | the configured maximum state of charge for battery-life optimization                 | frequent          |
-| Battery State of Charge Strategy                 |      | the SOC target selection (e.g. internal, external or constant)                       | infrequent        |
-| Battery State of Charge Constant Target          | %    | the configured SOC target while the strategy is Constant                             | frequent          |
-| Battery External Power                           | W    | the configured battery power while the strategy is External                           | infrequent        |
-| Battery Calibration Charge Power                 | W    | the charging power used for the calibration; configurable from 0 to 6,000 W         | static            |
-| Battery Converter Maximum Charging Current       | A    | the configured converter charge-current limit; Factory-level write access only        | infrequent        |
-| Battery Converter Maximum Discharging Current    | A    | the configured converter discharge-current limit; Factory-level write access only     | infrequent        |
+| Power Sensor Phase 1/2/3 Offset Correction      |      | the power sensor offset correction reported for the corresponding phase                   | static            |
+| Power Sensor Phase 1/2/3 Gain Correction        |      | the power sensor gain correction factor for the corresponding phase                       | static            |
+| Inverter Serial Number                          |      | the serial number of the inverter                                                         | static            |
+| Inverter Software Version                       |      | the software version reported by the inverter                                             | infrequent        |
+| RS485 Modbus Mode                               |      | whether RS485 is configured as Modbus master or slave                                     | infrequent        |
+| Date of Last Update                             |      | the date and time of the inverter's last update                                           | infrequent        |
+| Inverter DC Start Voltage                       | V    | the configured DC voltage at which the inverter starts                                    | static            |
+| Faults                                          |      | a bitmask of the failures reported by the inverter                                        | frequent          |
+| Core Temperature                                | °C   | the instantaneous temperature of the invertor core                                        | frequent          |
+| Heat Sink Temperature                           | °C   | the instantaneous temperature of the invertor heat sink                                   | frequent          |
+| Heat Sink (battery actuator) Temperature        | °C   | the instantaneous temperature of the battery actuator heat sink                           | frequent          |
+| Battery Minimum State of Charge                 | %    | the configured minimum state of charge for regular operation                              | frequent          |
+| Battery Maximum State of Charge                 | %    | the configured maximum state of charge for battery-life optimization                      | frequent          |
+| Battery State of Charge Strategy                |      | the SOC target selection (e.g. internal, external or constant)                            | infrequent        |
+| Battery State of Charge Constant Target         | %    | the configured SOC target while the strategy is Constant                                  | frequent          |
+| Battery External Power                          | W    | the configured battery power while the strategy is External                               | infrequent        |
+| Battery Calibration Charge Power                | W    | the charging power used for the calibration; configurable from 0 to 6,000 W               | static            |
+| Battery Converter Maximum Charging Current      | A    | the configured converter charge-current limit; Factory-level write access only            | infrequent        |
+| Battery Converter Maximum Discharging Current   | A    | the configured converter discharge-current limit; Factory-level write access only         | infrequent        |
 
 ### Reducing communication load
 

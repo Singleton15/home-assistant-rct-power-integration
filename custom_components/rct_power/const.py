@@ -9,6 +9,7 @@ from homeassistant.const import Platform
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN: Final = "rct_power"
+EVENT_UPDATE_COMPLETE: Final = f"{DOMAIN}_update_complete"
 ICON: Final = "mdi:solar-power"
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,

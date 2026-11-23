@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -22,6 +22,7 @@ from custom_components.rct_power.const import (
     CONF_HOSTNAME,
     DEFAULT_PORT,
     DOMAIN,
+    EVENT_UPDATE_COMPLETE,
     EntityUpdatePriority,
 )
 from custom_components.rct_power.diagnostics import (
@@ -359,15 +360,11 @@ async def test_power_sensor_correction_sensors_require_god_mode(
     )
     assert hass.states.get("sensor.master_maintenance_charge_power") is None
     assert (
-        hass.states.get(
-            "sensor.master_battery_converter_maximum_charging_current"
-        )
+        hass.states.get("sensor.master_battery_converter_maximum_charging_current")
         is None
     )
     assert (
-        hass.states.get(
-            "sensor.master_battery_converter_maximum_discharging_current"
-        )
+        hass.states.get("sensor.master_battery_converter_maximum_discharging_current")
         is None
     )
     max_battery_to_grid_power_id = REGISTRY.get_by_name("p_rec_lim[1]").object_id
@@ -430,7 +427,18 @@ async def test_update_entity_refreshes_its_polling_coordinator(
     target_object_id = REGISTRY.get_by_name("g_sync.p_ac_grid_sum_lp").object_id
     battery_power_object_id = REGISTRY.get_by_name("g_sync.p_acc_lp").object_id
     requested_object_ids: list[list[int]] = []
+    update_events: list[tuple[str, str]] = []
+    grid_power_at_event: list[str | None] = []
     should_update = False
+
+    def record_update_event(event: Event) -> None:
+        update_events.append(
+            (event.data["entity_prefix"], event.data["update_priority"])
+        )
+        state = hass.states.get("sensor.master_grid_power")
+        grid_power_at_event.append(state.state if state else None)
+
+    hass.bus.async_listen(EVENT_UPDATE_COMPLETE, record_update_event)
 
     async def get_data(object_ids: list[int]) -> RctPowerData:
         data = await fake_get_data(object_ids)
@@ -450,6 +458,13 @@ async def test_update_entity_refreshes_its_polling_coordinator(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+        assert update_events == [
+            ("Master", "very_frequent"),
+            ("Master", "frequent"),
+            ("Master", "infrequent"),
+            ("Master", "static"),
+        ]
+
         coordinator = config_entry.runtime_data.update_coordinators[
             EntityUpdatePriority.VERY_FREQUENT
         ]
@@ -466,3 +481,6 @@ async def test_update_entity_refreshes_its_polling_coordinator(
     assert target_object_id in requested_object_ids[0]
     assert battery_power_object_id in requested_object_ids[0]
     assert hass.states.get("sensor.master_grid_power").state == "3"
+    assert update_events[-1] == ("Master", "very_frequent")
+    assert len(update_events) == 5
+    assert grid_power_at_event[-1] == "3"
