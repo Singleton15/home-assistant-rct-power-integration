@@ -20,7 +20,11 @@ from custom_components.rct_power.const import (
     ConfMissedResponseTolerance,
     EntityUpdatePriority,
 )
-from custom_components.rct_power.lib.api import RctPowerData, ValidApiResponse
+from custom_components.rct_power.lib.api import (
+    InvalidApiResponse,
+    RctPowerData,
+    ValidApiResponse,
+)
 from custom_components.rct_power.lib.registry import REGISTRY
 
 
@@ -54,7 +58,14 @@ async def test_status_uses_http_probe_after_fast_polling_fails(
 
     async def get_data(object_ids: list[int]) -> RctPowerData:
         if failing:
-            return {}
+            return {
+                object_id: InvalidApiResponse(
+                    object_id=object_id,
+                    time=datetime.now(tz=UTC),
+                    cause="CONNECTION_ERROR",
+                )
+                for object_id in object_ids
+            }
         return {
             object_id: ValidApiResponse(
                 object_id=object_id,

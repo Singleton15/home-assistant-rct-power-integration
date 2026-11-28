@@ -122,9 +122,26 @@ class RctPowerApiClient:
     async def async_get_data(self, object_ids: list[int]) -> RctPowerData:
         async with self._connection_lock:
             async with asyncio.timeout(CONNECTION_TIMEOUT):
-                reader, writer = await open_connection(
-                    host=self._hostname, port=self._port
-                )
+                try:
+                    reader, writer = await open_connection(
+                        host=self._hostname, port=self._port
+                    )
+                except OSError as exc:
+                    LOGGER.debug(
+                        "Error connecting to RCT Power inverter at %s:%s: %s",
+                        self._hostname,
+                        self._port,
+                        exc,
+                    )
+                    request_time = datetime.now(tz=UTC)
+                    return {
+                        object_id: InvalidApiResponse(
+                            object_id=object_id,
+                            time=request_time,
+                            cause="CONNECTION_ERROR",
+                        )
+                        for object_id in object_ids
+                    }
 
                 try:
                     if reader.at_eof():
