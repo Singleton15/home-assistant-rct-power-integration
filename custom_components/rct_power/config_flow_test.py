@@ -16,6 +16,7 @@ from custom_components.rct_power.const import (
     CONF_SERVICE_PASSWORD,
     CONF_WRITE_ACCESS,
     DOMAIN,
+    ConfMissedResponseTolerance,
     WriteAccess,
 )
 
@@ -42,6 +43,26 @@ async def test_none_access_does_not_require_password(hass: HomeAssistant) -> Non
     assert result["type"] == "create_entry"
     assert config_entry.options[CONF_ALLOW_WRITES] is False
     assert config_entry.options[CONF_GOD_MODE] is False
+
+
+async def test_missed_response_tolerances_are_saved(hass: HomeAssistant) -> None:
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    config_entry.add_to_hass(hass)
+    tolerances = {
+        ConfMissedResponseTolerance.VERY_FREQUENT: 0,
+        ConfMissedResponseTolerance.FREQUENT: 3,
+        ConfMissedResponseTolerance.INFREQUENT: 2,
+        ConfMissedResponseTolerance.STATIC: 1,
+    }
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_WRITE_ACCESS: WriteAccess.NONE, **tolerances},
+    )
+
+    assert result["type"] == "create_entry"
+    assert all(config_entry.options[key] == count for key, count in tolerances.items())
 
 
 @pytest.mark.parametrize(

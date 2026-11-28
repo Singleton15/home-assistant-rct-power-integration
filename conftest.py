@@ -31,7 +31,7 @@ def bypass_get_data_fixture():
     """Skip calls to get data from API."""
     with patch(
         "custom_components.rct_power.RctPowerApiClient.async_get_data",
-        return_value=None,
+        return_value={},
     ):
         yield
 

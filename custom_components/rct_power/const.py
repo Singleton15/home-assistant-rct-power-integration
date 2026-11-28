@@ -65,8 +65,22 @@ class ConfScanInterval(StrEnum):
     STATIC = "static_scan_interval"
 
 
+class ConfMissedResponseTolerance(StrEnum):
+    VERY_FREQUENT = "very_frequent_missed_response_tolerance"
+    FREQUENT = "frequent_missed_response_tolerance"
+    INFREQUENT = "infrequent_missed_response_tolerance"
+    STATIC = "static_missed_response_tolerance"
+
+
 class ScanIntervalDefault(IntEnum):
     VERY_FREQUENT = 30
     FREQUENT = 30
     INFREQUENT = 60 * 3
     STATIC = 60 * 60
+
+
+class MissedResponseToleranceDefault(IntEnum):
+    VERY_FREQUENT = 0
+    FREQUENT = 0
+    INFREQUENT = 0
+    STATIC = 0

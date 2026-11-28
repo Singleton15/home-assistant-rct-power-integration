@@ -30,10 +30,14 @@ class RctPowerDataUpdateCoordinator(DataUpdateCoordinator[RctPowerData]):
         name_suffix: str,
         object_ids: list[int],
         update_interval: int,  # in seconds
+        missed_response_tolerance: int = 0,
     ) -> None:
         self.client = client
         self.object_ids = object_ids
         self.update_priority = name_suffix
+        self.missed_response_tolerance = missed_response_tolerance
+        self._missed_responses: dict[int, int] = {}
+        self._last_valid_responses: dict[int, ValidApiResponse] = {}
         self._update_completed = False
         super().__init__(
             hass=hass,
@@ -60,11 +64,35 @@ class RctPowerDataUpdateCoordinator(DataUpdateCoordinator[RctPowerData]):
     def has_valid_value(self, object_id: int) -> bool:
         return isinstance(self.get_latest_response(object_id), ValidApiResponse)
 
+    def record_valid_response(self, response: ValidApiResponse) -> None:
+        """Track a successful write as the latest valid response."""
+        self._missed_responses[response.object_id] = 0
+        self._last_valid_responses[response.object_id] = response
+
     async def _async_update_data(self) -> RctPowerData:
         if not self.object_ids:
             self._update_completed = True
             return {}
-        data = await self.client.async_get_data(object_ids=self.object_ids)
+        responses = await self.client.async_get_data(object_ids=self.object_ids)
+        data: RctPowerData = {}
+        for object_id in self.object_ids:
+            response = responses.get(object_id)
+            if isinstance(response, ValidApiResponse):
+                self._missed_responses[object_id] = 0
+                self._last_valid_responses[object_id] = response
+                data[object_id] = response
+                continue
+
+            missed_responses = self._missed_responses.get(object_id, 0) + 1
+            self._missed_responses[object_id] = missed_responses
+            if (
+                missed_responses <= self.missed_response_tolerance
+                and object_id in self._last_valid_responses
+            ):
+                data[object_id] = self._last_valid_responses[object_id]
+            elif response is not None:
+                data[object_id] = response
+
         self._update_completed = True
         return data
 

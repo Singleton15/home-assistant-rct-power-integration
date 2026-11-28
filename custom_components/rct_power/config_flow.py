@@ -26,7 +26,9 @@ from .const import (
     DEFAULT_ENTITY_PREFIX,
     DEFAULT_PORT,
     DOMAIN,
+    ConfMissedResponseTolerance,
     ConfScanInterval,
+    MissedResponseToleranceDefault,
     ScanIntervalDefault,
     WriteAccess,
 )
@@ -246,6 +248,22 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(
             ConfScanInterval.STATIC.value, default=ScanIntervalDefault.STATIC
         ): cv.positive_int,
+        vol.Optional(
+            ConfMissedResponseTolerance.VERY_FREQUENT,
+            default=MissedResponseToleranceDefault.VERY_FREQUENT,
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(
+            ConfMissedResponseTolerance.FREQUENT,
+            default=MissedResponseToleranceDefault.FREQUENT,
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(
+            ConfMissedResponseTolerance.INFREQUENT,
+            default=MissedResponseToleranceDefault.INFREQUENT,
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(
+            ConfMissedResponseTolerance.STATIC,
+            default=MissedResponseToleranceDefault.STATIC,
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(
             CONF_WRITE_ACCESS,
             default=WriteAccess.NONE,

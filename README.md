@@ -51,6 +51,11 @@ After installation the integration allows for the following configuration parame
 - `Frequent polling interval`: The polling interval in seconds for entities updated frequently, defaults to `30`.
 - `Infrequent polling interval`: The polling interval in seconds for entities updated infrequently, defaults to `180`.
 - `Static polling interval`: The polling interval in seconds for entities updated seldomly, defaults to `3600`.
+- `Very frequent missed responses tolerated`, `Frequent missed responses tolerated`,
+  `Infrequent missed responses tolerated`, and `Static missed responses tolerated`:
+  Number of unanswered requests in that polling group for which sensors retain
+  their previous value before becoming unavailable. Each defaults to `0`, which
+  makes a sensor unavailable on its first unanswered request.
 - `Write Access Level`: `None` (default), `Service`, or `Factory`. Service
   access requires the Service password; Factory access requires the Factory
   password and includes Service access.

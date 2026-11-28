@@ -27,11 +27,19 @@
           "frequent_scan_interval": "Frequent polling interval (s)",
           "infrequent_scan_interval": "Infrequent polling interval (s)",
           "static_scan_interval": "Static polling interval (s)",
+          "very_frequent_missed_response_tolerance": "Very frequent missed responses tolerated",
+          "frequent_missed_response_tolerance": "Frequent missed responses tolerated",
+          "infrequent_missed_response_tolerance": "Infrequent missed responses tolerated",
+          "static_missed_response_tolerance": "Static missed responses tolerated",
           "write_access": "Write Access Level",
           "restart_serial_number": "Inverter serial number for communication restart"
         },
         "data_description": {
-          "write_access": "Factory access enables settings that might void the warranty."
+          "write_access": "Factory access enables settings that might void the warranty.",
+          "very_frequent_missed_response_tolerance": "Keep the last value available for this many unanswered polling requests.",
+          "frequent_missed_response_tolerance": "Keep the last value available for this many unanswered polling requests.",
+          "infrequent_missed_response_tolerance": "Keep the last value available for this many unanswered polling requests.",
+          "static_missed_response_tolerance": "Keep the last value available for this many unanswered polling requests."
         }
       },
       "confirm_service_access": {

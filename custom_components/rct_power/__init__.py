@@ -33,8 +33,10 @@ from .const import (
     PLATFORMS,
     RESTART_WAIT_SECONDS,
     SERVICE_RESTART_COMMUNICATION,
+    ConfMissedResponseTolerance,
     ConfScanInterval,
     EntityUpdatePriority,
+    MissedResponseToleranceDefault,
     ScanIntervalDefault,
 )
 from .coordinator import RctPowerDataUpdateCoordinator
@@ -195,6 +197,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         update_interval=options.get(
             ConfScanInterval.VERY_FREQUENT, ScanIntervalDefault.VERY_FREQUENT
         ),
+        missed_response_tolerance=options.get(
+            ConfMissedResponseTolerance.VERY_FREQUENT,
+            MissedResponseToleranceDefault.VERY_FREQUENT,
+        ),
     )
 
     frequent_update_coordinator = RctPowerDataUpdateCoordinator(
@@ -210,6 +216,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         ),
         update_interval=options.get(
             ConfScanInterval.FREQUENT, ScanIntervalDefault.FREQUENT
+        ),
+        missed_response_tolerance=options.get(
+            ConfMissedResponseTolerance.FREQUENT,
+            MissedResponseToleranceDefault.FREQUENT,
         ),
     )
 
@@ -227,6 +237,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         update_interval=options.get(
             ConfScanInterval.INFREQUENT, ScanIntervalDefault.INFREQUENT
         ),
+        missed_response_tolerance=options.get(
+            ConfMissedResponseTolerance.INFREQUENT,
+            MissedResponseToleranceDefault.INFREQUENT,
+        ),
     )
 
     static_update_coordinator = RctPowerDataUpdateCoordinator(
@@ -242,6 +256,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         ),
         update_interval=options.get(
             ConfScanInterval.STATIC, ScanIntervalDefault.STATIC
+        ),
+        missed_response_tolerance=options.get(
+            ConfMissedResponseTolerance.STATIC,
+            MissedResponseToleranceDefault.STATIC,
         ),
     )
 

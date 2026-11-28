@@ -120,6 +120,7 @@ class RctPowerEntity(MultiCoordinatorEntity):
         # update every coordinator that holds this object so all entities agree
         for coordinator in self.coordinators:
             if object_id in coordinator.object_ids:
+                coordinator.record_valid_response(response)
                 coordinator.async_set_updated_data(
                     {**coordinator.data, object_id: response}
                 )

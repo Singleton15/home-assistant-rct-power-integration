@@ -28,6 +28,7 @@ from custom_components.rct_power.const import (
     DOMAIN,
     RESTART_WAIT_SECONDS,
     SERVICE_RESTART_COMMUNICATION,
+    ConfMissedResponseTolerance,
     EntityUpdatePriority,
 )
 from custom_components.rct_power.lib.entities import all_entity_descriptions
@@ -158,6 +159,12 @@ async def test_setup_unload_and_reload_entry(hass: HomeAssistant) -> None:
             CONF_PORT: DEFAULT_PORT,
             CONF_ENTITY_PREFIX: DEFAULT_ENTITY_PREFIX,
         },
+        options={
+            ConfMissedResponseTolerance.VERY_FREQUENT: 1,
+            ConfMissedResponseTolerance.FREQUENT: 2,
+            ConfMissedResponseTolerance.INFREQUENT: 3,
+            ConfMissedResponseTolerance.STATIC: 4,
+        },
         entry_id="test",
     )
 
@@ -168,6 +175,15 @@ async def test_setup_unload_and_reload_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert isinstance(config_entry.runtime_data, RctData)
+    assert {
+        priority: coordinator.missed_response_tolerance
+        for priority, coordinator in config_entry.runtime_data.update_coordinators.items()
+    } == {
+        EntityUpdatePriority.VERY_FREQUENT: 1,
+        EntityUpdatePriority.FREQUENT: 2,
+        EntityUpdatePriority.INFREQUENT: 3,
+        EntityUpdatePriority.STATIC: 4,
+    }
 
     # Reload the entry and assert that the data from above is still there
     assert await hass.config_entries.async_reload(config_entry.entry_id)
@@ -215,6 +231,7 @@ async def test_restart_service_stops_restarts_waits_and_resumes(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     events: list[tuple[str, object]] = []
+    original_unload = hass.config_entries.async_unload
 
     async def unload(entry_id: str) -> bool:
         events.append(("unload", entry_id))
@@ -253,6 +270,7 @@ async def test_restart_service_stops_restarts_waits_and_resumes(
         ("wait", RESTART_WAIT_SECONDS),
         ("setup", config_entry.entry_id),
     ]
+    assert await original_unload(config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
