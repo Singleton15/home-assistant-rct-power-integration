@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
 import pytest
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.rct_power import (
     RctData,
     _async_send_restart_request,
-    async_setup_entry,
     object_ids_for_update_priority,
 )
 from custom_components.rct_power.const import (
@@ -192,8 +190,14 @@ async def test_setup_unload_and_reload_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("error_on_get_data")
-async def test_setup_entry_exception(hass: HomeAssistant) -> None:
-    """Test ConfigEntryNotReady when API raises an exception during entry setup."""
+@pytest.mark.parametrize(
+    ("http_reachable", "expected_state"),
+    [(False, "offline"), (True, "stale")],
+)
+async def test_setup_entry_reports_offline_if_first_api_refresh_fails(
+    hass: HomeAssistant, http_reachable: bool, expected_state: str
+) -> None:
+    """Keep the entry loaded and classify an outage before any API response."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -203,13 +207,20 @@ async def test_setup_entry_exception(hass: HomeAssistant) -> None:
         },
         entry_id="test",
     )
-    config_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
+    config_entry.add_to_hass(hass)
 
-    # In this case we are testing the condition where async_setup_entry raises
-    # ConfigEntryNotReady using the `error_on_get_data` fixture which simulates
-    # an error.
-    with pytest.raises(ConfigEntryNotReady):
-        assert await async_setup_entry(hass, config_entry)
+    with patch(
+        "custom_components.rct_power.sensor.RctPowerCommunicationStatusSensor._async_http_probe",
+        return_value=http_reachable,
+    ) as http_probe:
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    http_probe.assert_awaited_once()
+    assert (
+        hass.states.get("sensor.rct_power_storage_communication_status").state
+        == expected_state
+    )
 
 
 @pytest.mark.usefixtures("bypass_get_data")

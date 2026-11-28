@@ -152,8 +152,11 @@ class RctPowerEntity(MultiCoordinatorEntity):
     @property
     def available(self) -> bool:
         return all(
-            isinstance(
-                self.get_api_response_by_id(object_info.object_id), ValidApiResponse
+            any(
+                coordinator.last_update_success
+                and coordinator.has_valid_value(object_info.object_id)
+                for coordinator in self.coordinators
+                if object_info.object_id in coordinator.object_ids
             )
             for object_info in self.object_infos
         )

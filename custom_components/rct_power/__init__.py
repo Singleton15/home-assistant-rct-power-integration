@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -263,10 +263,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RctConfigEntry) -> bool:
         ),
     )
 
-    await very_frequent_update_coordinator.async_config_entry_first_refresh()
-    await frequent_update_coordinator.async_config_entry_first_refresh()
-    await infrequent_update_coordinator.async_config_entry_first_refresh()
-    await static_update_coordinator.async_config_entry_first_refresh()
+    for coordinator in (
+        very_frequent_update_coordinator,
+        frequent_update_coordinator,
+        infrequent_update_coordinator,
+        static_update_coordinator,
+    ):
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady as err:
+            LOGGER.warning(
+                "Initial %s polling failed; continuing setup and retrying in the "
+                "background: %s",
+                coordinator.update_priority,
+                err,
+            )
 
     entry.runtime_data = RctData(
         {

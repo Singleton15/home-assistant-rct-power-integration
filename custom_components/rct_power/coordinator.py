@@ -38,6 +38,7 @@ class RctPowerDataUpdateCoordinator(DataUpdateCoordinator[RctPowerData]):
         self.missed_response_tolerance = missed_response_tolerance
         self._missed_responses: dict[int, int] = {}
         self._last_valid_responses: dict[int, ValidApiResponse] = {}
+        self.last_update_had_valid_response = False
         self._update_completed = False
         super().__init__(
             hass=hass,
@@ -50,7 +51,7 @@ class RctPowerDataUpdateCoordinator(DataUpdateCoordinator[RctPowerData]):
     def get_latest_response(
         self, object_id: int
     ) -> ValidApiResponse | InvalidApiResponse | None:
-        return self.data.get(object_id)
+        return (self.data or {}).get(object_id)
 
     def get_valid_value_or(
         self, object_id: int, default_value: ApiResponseValue
@@ -64,16 +65,26 @@ class RctPowerDataUpdateCoordinator(DataUpdateCoordinator[RctPowerData]):
     def has_valid_value(self, object_id: int) -> bool:
         return isinstance(self.get_latest_response(object_id), ValidApiResponse)
 
+    @property
+    def has_available_values(self) -> bool:
+        return self.last_update_success and any(
+            self.has_valid_value(object_id) for object_id in self.object_ids
+        )
+
     def record_valid_response(self, response: ValidApiResponse) -> None:
         """Track a successful write as the latest valid response."""
         self._missed_responses[response.object_id] = 0
         self._last_valid_responses[response.object_id] = response
 
     async def _async_update_data(self) -> RctPowerData:
+        self.last_update_had_valid_response = False
         if not self.object_ids:
             self._update_completed = True
             return {}
         responses = await self.client.async_get_data(object_ids=self.object_ids)
+        self.last_update_had_valid_response = any(
+            isinstance(response, ValidApiResponse) for response in responses.values()
+        )
         data: RctPowerData = {}
         for object_id in self.object_ids:
             response = responses.get(object_id)

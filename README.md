@@ -86,6 +86,19 @@ triggers:
       update_priority: very_frequent
 ```
 
+The `Communication Status` sensor reports `online`, `offline`, or `stale`.
+Any successful inverter API response sets it to `online`. When all enabled
+entities in the very-frequent and frequent polling groups become unavailable
+(including after any configured missed-response tolerance), the integration
+checks the inverter's HTTP web interface: if it responds, the state is `stale`;
+if it does not, the state is `offline`. This check also runs at startup when
+those polling groups have no available values, so the sensor can report
+`offline` or `stale` before the first successful API response. If initial API
+polling fails, the integration remains loaded and retries in the background.
+Once the sensor reports `stale`, the integration does not repeat the HTTP
+reachability check. If the inverter then goes offline, the sensor remains
+`stale` until API communication recovers or the integration is reloaded.
+
 The `rct_power.restart_communication` action can be called from an automation or
 script to restart an inverter's communication module. This is the same reboot
 operation as pressing **Reboot** in the inverter's web interface, and can be
@@ -94,7 +107,8 @@ unloads the integration entry, sends an HTTP GET to
 `http://<inverter-host>/EN/restart.html` using the fixed username `admin` and
 configured serial number, waits 30 seconds, then reloads the integration entry.
 It succeeds only if the response contains the inverter's `Rebooting`
-confirmation. It does not detect stalled communication or run automatically.
+confirmation. The integration detects stalled communication, but does not
+restart it automatically.
 
 ```yaml
 action: rct_power.restart_communication
@@ -160,6 +174,12 @@ depending on your preference.
 ## Most commonly used entities
 
 :warning: The interpretations might be incorrect due to a lack of official documentation.
+
+### Communication
+
+| Entity name          | Unit | Description                                                       | Polling frequency |
+| -------------------- | ---- | ----------------------------------------------------------------- | ----------------- |
+| Communication Status |      | `online`, `offline`, or `stale`; derived from API and HTTP checks | derived           |
 
 ### Grid
 
